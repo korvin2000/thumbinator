@@ -151,13 +151,14 @@ function App() {
       closeTimerRef.current = null;
     }
 
-    if (selectedImage?.id === image.id) {
+    const isSameImage = selectedImage?.id === image.id;
+
+    if (isSameImage) {
       if (detailPanelOpen) {
         closeDetailPanel();
         return;
       }
 
-      setSelectedImage(image);
       setDetailPanelOpen(true);
       return;
     }
