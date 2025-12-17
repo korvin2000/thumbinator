@@ -142,7 +142,7 @@ function App() {
     closeTimerRef.current = setTimeout(() => {
       setSelectedImage(null);
       closeTimerRef.current = null;
-    }, 240);
+    }, 300);
   };
 
   const openDetailPanel = (image) => {
@@ -258,6 +258,7 @@ function App() {
         hasActiveFilters={hasActiveFilters}
         activeFilterCount={activeFilterCount}
         onToggleFilterPanel={toggleFilterPanel}
+        onClearFilters={resetFilters}
         stats={{ total: images.length, filtered: filteredImages.length }}
         onSearch={(value) => setFilters((prev) => ({ ...prev, search: value }))}
         searchValue={filters.search}

@@ -1,7 +1,16 @@
 import React from 'react';
 import { debounce } from '../data/utils.js';
 
-function Header({ filterPanelOpen, onToggleFilterPanel, stats, onSearch, searchValue, hasActiveFilters, activeFilterCount }) {
+function Header({
+  filterPanelOpen,
+  onToggleFilterPanel,
+  stats,
+  onSearch,
+  searchValue,
+  hasActiveFilters,
+  activeFilterCount,
+  onClearFilters
+}) {
   const handleSearch = debounce((value) => onSearch(value), 300);
 
   return (
@@ -28,25 +37,39 @@ function Header({ filterPanelOpen, onToggleFilterPanel, stats, onSearch, searchV
             className="w-full pl-10 pr-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
           />
         </div>
-        <button
-          onClick={onToggleFilterPanel}
-          className={`px-4 py-3 rounded-xl text-sm font-medium transition-colors border flex items-center gap-2 ${
-            filterPanelOpen
-              ? 'bg-indigo-600 text-white border-indigo-500'
-              : hasActiveFilters
-                ? 'bg-slate-900 text-indigo-200 border-indigo-500 shadow-[0_0_0_1px_rgba(99,102,241,0.35)]'
-                : 'bg-slate-900 text-slate-200 border-slate-700 hover:border-indigo-500'
-          }`}
-          aria-pressed={filterPanelOpen}
-        >
-          <i className="fas fa-filter" />
-          <span>Filters</span>
-          {hasActiveFilters && (
-            <span className="ml-1 px-2 py-0.5 text-xs rounded-full bg-indigo-500/20 text-indigo-100 border border-indigo-400/50">
-              {activeFilterCount}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={onToggleFilterPanel}
+            className={`px-4 py-3 rounded-xl text-sm font-medium transition-colors border flex items-center gap-2 ${
+              filterPanelOpen
+                ? 'bg-indigo-600 text-white border-indigo-500'
+                : hasActiveFilters
+                  ? 'bg-slate-900 text-indigo-200 border-indigo-500 shadow-[0_0_0_1px_rgba(99,102,241,0.35)]'
+                  : 'bg-slate-900 text-slate-200 border-slate-700 hover:border-indigo-500'
+            }`}
+            aria-pressed={filterPanelOpen}
+          >
+            <i className="fas fa-filter" />
+            <span>Filters</span>
+            {hasActiveFilters && (
+              <span className="ml-1 px-2 py-0.5 text-xs rounded-full bg-indigo-500/20 text-indigo-100 border border-indigo-400/50">
+                {activeFilterCount}
+              </span>
+            )}
+          </button>
+          <button
+            onClick={onClearFilters}
+            className={`px-3 py-3 rounded-xl text-sm font-medium transition-colors border bg-slate-900 text-slate-200 border-slate-700 ${
+              hasActiveFilters ? 'hover:border-rose-500 hover:text-rose-200' : 'opacity-50 cursor-not-allowed'
+            }`}
+            disabled={!hasActiveFilters}
+          >
+            <span className="flex items-center gap-2">
+              <i className="fas fa-rotate-left" />
+              <span>Clear</span>
             </span>
-          )}
-        </button>
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-3 min-w-[220px]">
