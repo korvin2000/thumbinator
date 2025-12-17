@@ -150,6 +150,18 @@ function App() {
       clearTimeout(closeTimerRef.current);
       closeTimerRef.current = null;
     }
+
+    if (selectedImage?.id === image.id) {
+      if (detailPanelOpen) {
+        closeDetailPanel();
+        return;
+      }
+
+      setSelectedImage(image);
+      setDetailPanelOpen(true);
+      return;
+    }
+
     setSelectedImage(image);
     setDetailPanelOpen(true);
   };
@@ -236,11 +248,15 @@ function App() {
   }, []);
 
   const overlayVisible = filterPanelOpen || detailPanelOpen;
+  const activeFilterCount = activeFilters.length;
+  const hasActiveFilters = activeFilterCount > 0;
 
   return (
     <div className="min-h-screen text-slate-200">
       <Header
         filterPanelOpen={filterPanelOpen}
+        hasActiveFilters={hasActiveFilters}
+        activeFilterCount={activeFilterCount}
         onToggleFilterPanel={toggleFilterPanel}
         stats={{ total: images.length, filtered: filteredImages.length }}
         onSearch={(value) => setFilters((prev) => ({ ...prev, search: value }))}

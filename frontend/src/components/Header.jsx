@@ -1,7 +1,7 @@
 import React from 'react';
 import { debounce } from '../data/utils.js';
 
-function Header({ filterPanelOpen, onToggleFilterPanel, stats, onSearch, searchValue }) {
+function Header({ filterPanelOpen, onToggleFilterPanel, stats, onSearch, searchValue, hasActiveFilters, activeFilterCount }) {
   const handleSearch = debounce((value) => onSearch(value), 300);
 
   return (
@@ -30,11 +30,22 @@ function Header({ filterPanelOpen, onToggleFilterPanel, stats, onSearch, searchV
         </div>
         <button
           onClick={onToggleFilterPanel}
-          className={`px-4 py-3 rounded-xl text-sm font-medium transition-colors border ${
-            filterPanelOpen ? 'bg-indigo-600 text-white border-indigo-500' : 'bg-slate-900 text-slate-200 border-slate-700 hover:border-indigo-500'
+          className={`px-4 py-3 rounded-xl text-sm font-medium transition-colors border flex items-center gap-2 ${
+            filterPanelOpen
+              ? 'bg-indigo-600 text-white border-indigo-500'
+              : hasActiveFilters
+                ? 'bg-slate-900 text-indigo-200 border-indigo-500 shadow-[0_0_0_1px_rgba(99,102,241,0.35)]'
+                : 'bg-slate-900 text-slate-200 border-slate-700 hover:border-indigo-500'
           }`}
+          aria-pressed={filterPanelOpen}
         >
-          <i className="fas fa-filter mr-2" /> Filters
+          <i className="fas fa-filter" />
+          <span>Filters</span>
+          {hasActiveFilters && (
+            <span className="ml-1 px-2 py-0.5 text-xs rounded-full bg-indigo-500/20 text-indigo-100 border border-indigo-400/50">
+              {activeFilterCount}
+            </span>
+          )}
         </button>
       </div>
 

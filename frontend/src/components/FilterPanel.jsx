@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { resolutionLabels } from '../data/utils.js';
 
 function FilterPanel({ isOpen, onClose, filters, onFiltersChange, onApply, onReset, categories, tags }) {
@@ -19,6 +19,20 @@ function FilterPanel({ isOpen, onClose, filters, onFiltersChange, onApply, onRes
       return { ...prev, tags: next };
     });
   };
+
+  useEffect(() => {
+    if (!isOpen) return undefined;
+
+    const handleKeyDown = (event) => {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        onApply();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onApply]);
 
   return (
     <aside className={`slide-panel fixed right-0 top-0 h-full w-80 lg:w-96 bg-slate-900/90 border-l border-slate-700/50 z-40 overflow-y-auto ${isOpen ? 'open' : ''}`}>
