@@ -1,7 +1,31 @@
 import React from 'react';
 import ImageCard from './ImageCard.jsx';
 
-function ImageGrid({ images, gridSize, onOpenDetail, view }) {
+function ImageGrid({ images, gridSize, onOpenDetail, view, loading, error }) {
+  if (loading) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center text-center py-20">
+        <div className="w-24 h-24 bg-slate-800 rounded-full flex items-center justify-center mb-6 animate-pulse">
+          <i className="fas fa-spinner fa-spin text-3xl text-indigo-400" />
+        </div>
+        <h3 className="text-xl font-semibold text-slate-300 mb-2">Loading images</h3>
+        <p className="text-slate-500 max-w-md">Fetching results from the backend...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center text-center py-20">
+        <div className="w-24 h-24 bg-rose-950 rounded-full flex items-center justify-center mb-6">
+          <i className="fas fa-triangle-exclamation text-3xl text-rose-300" />
+        </div>
+        <h3 className="text-xl font-semibold text-slate-300 mb-2">Unable to load images</h3>
+        <p className="text-slate-500 max-w-md">{error}</p>
+      </div>
+    );
+  }
+
   if (!images.length) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center text-center py-20">

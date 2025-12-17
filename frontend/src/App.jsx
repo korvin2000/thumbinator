@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import ActiveFiltersBar from './components/ActiveFiltersBar.jsx';
 import DetailPanel from './components/DetailPanel.jsx';
 import FilterPanel from './components/FilterPanel.jsx';
@@ -6,8 +6,8 @@ import FooterBar from './components/FooterBar.jsx';
 import Header from './components/Header.jsx';
 import ImageGrid from './components/ImageGrid.jsx';
 import Toolbar from './components/Toolbar.jsx';
-import { allTags, categories, generateMockImages } from './data/mockData.js';
-import { activeResolutionLabels, formatDate, formatDateTime, resolutionThresholds } from './data/utils.js';
+import { fetchFilterOptions, openImageStream } from './api/imageApi.js';
+import { activeResolutionLabels, formatDate, formatDateTime } from './data/utils.js';
 
 const baseFilters = {
   search: '',
@@ -27,7 +27,7 @@ const createFilterState = () => ({
 });
 
 function App() {
-  const [images] = useState(() => generateMockImages(60));
+  const [images, setImages] = useState([]);
   const [filters, setFilters] = useState(createFilterState);
   const [pendingFilters, setPendingFilters] = useState(createFilterState);
   const [sortBy, setSortBy] = useState('newest');
@@ -36,92 +36,12 @@ function App() {
   const [filterPanelOpen, setFilterPanelOpen] = useState(false);
   const [detailPanelOpen, setDetailPanelOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
+  const [stats, setStats] = useState({ total: 0, filtered: 0 });
+  const [catalog, setCatalog] = useState({ categories: [], tags: [] });
+  const [loading, setLoading] = useState(true);
+  const [streamError, setStreamError] = useState(null);
+  const streamCleanupRef = useRef(null);
   const closeTimerRef = useRef(null);
-
-  const filteredImages = useMemo(() => {
-    let list = [...images];
-
-    if (filters.search) {
-      const searchLower = filters.search.toLowerCase();
-      list = list.filter((img) =>
-        img.name.toLowerCase().includes(searchLower) ||
-        img.description.toLowerCase().includes(searchLower) ||
-        img.category.toLowerCase().includes(searchLower) ||
-        img.tags.some((tag) => tag.toLowerCase().includes(searchLower)) ||
-        img.location.toLowerCase().includes(searchLower)
-      );
-    }
-
-    if (filters.colorMode === 'color') {
-      list = list.filter((img) => img.isColor);
-    } else if (filters.colorMode === 'bw') {
-      list = list.filter((img) => !img.isColor);
-    }
-
-    if (filters.minResolution > 0) {
-      const minPixels = resolutionThresholds[filters.minResolution];
-      list = list.filter((img) => img.width * img.height >= minPixels);
-    }
-
-    if (filters.minSize !== null) list = list.filter((img) => img.fileSize >= filters.minSize);
-    if (filters.maxSize !== null) list = list.filter((img) => img.fileSize <= filters.maxSize);
-
-    if (filters.categories.size > 0) {
-      list = list.filter((img) => filters.categories.has(img.category));
-    }
-
-    if (filters.tags.size > 0) {
-      list = list.filter((img) => [...filters.tags].some((tag) => img.tags.includes(tag)));
-    }
-
-    if (filters.dateFrom) {
-      const fromDate = new Date(filters.dateFrom);
-      list = list.filter((img) => img.dateCreated >= fromDate);
-    }
-
-    if (filters.dateTo) {
-      const toDate = new Date(filters.dateTo);
-      toDate.setHours(23, 59, 59);
-      list = list.filter((img) => img.dateCreated <= toDate);
-    }
-
-    if (filters.aspectRatio !== 'all') {
-      const ratios = { '16:9': 16 / 9, '4:3': 4 / 3, '1:1': 1, '3:2': 3 / 2, '21:9': 21 / 9 };
-      const targetRatio = ratios[filters.aspectRatio];
-      list = list.filter((img) => {
-        const imgRatio = img.width / img.height;
-        return Math.abs(imgRatio - targetRatio) < 0.1;
-      });
-    }
-
-    switch (sortBy) {
-      case 'newest':
-        list.sort((a, b) => b.dateCreated - a.dateCreated);
-        break;
-      case 'oldest':
-        list.sort((a, b) => a.dateCreated - b.dateCreated);
-        break;
-      case 'largest':
-        list.sort((a, b) => b.fileSize - a.fileSize);
-        break;
-      case 'smallest':
-        list.sort((a, b) => a.fileSize - b.fileSize);
-        break;
-      case 'name-asc':
-        list.sort((a, b) => a.name.localeCompare(b.name));
-        break;
-      case 'name-desc':
-        list.sort((a, b) => b.name.localeCompare(a.name));
-        break;
-      case 'resolution':
-        list.sort((a, b) => b.width * b.height - a.width * a.height);
-        break;
-      default:
-        break;
-    }
-
-    return list;
-  }, [filters, images, sortBy]);
 
   const activeFilters = useMemo(() => {
     const entries = [];
@@ -217,11 +137,56 @@ function App() {
     setFilterPanelOpen(false);
   };
 
+  const startStream = useCallback(() => {
+    if (streamCleanupRef.current) streamCleanupRef.current();
+
+    setImages([]);
+    setStreamError(null);
+    setLoading(true);
+    setStats((prev) => ({ ...prev, filtered: 0 }));
+
+    streamCleanupRef.current = openImageStream(filters, sortBy, {
+      onImage: (image) => {
+        setImages((prev) => {
+          const next = [...prev, image];
+          setStats((current) => ({ ...current, filtered: next.length }));
+          return next;
+        });
+      },
+      onComplete: (summary) => {
+        setStats({ total: summary.total, filtered: summary.filtered });
+        setLoading(false);
+        streamCleanupRef.current = null;
+      },
+      onError: () => {
+        setStreamError('Failed to stream images. Please try again.');
+        setLoading(false);
+        streamCleanupRef.current = null;
+      }
+    });
+  }, [filters, sortBy]);
+
   useEffect(() => {
     if (filterPanelOpen) {
       setPendingFilters({ ...filters, categories: new Set(filters.categories), tags: new Set(filters.tags) });
     }
   }, [filterPanelOpen, filters]);
+
+  useEffect(() => {
+    fetchFilterOptions()
+      .then((options) => {
+        setCatalog({ categories: Array.from(options.categories || []), tags: Array.from(options.tags || []) });
+        setStats((prev) => ({ ...prev, total: options.totalImages || 0 }));
+      })
+      .catch(() => setStreamError('Unable to load filter options'));
+  }, []);
+
+  useEffect(() => {
+    startStream();
+    return () => {
+      if (streamCleanupRef.current) streamCleanupRef.current();
+    };
+  }, [startStream]);
 
   useEffect(
     () => () => {
@@ -261,7 +226,7 @@ function App() {
         activeFilterCount={activeFilterCount}
         onToggleFilterPanel={toggleFilterPanel}
         onClearFilters={resetFilters}
-        stats={{ total: images.length, filtered: filteredImages.length }}
+        stats={stats}
         onSearch={(value) => setFilters((prev) => ({ ...prev, search: value }))}
         searchValue={filters.search}
       />
@@ -280,13 +245,15 @@ function App() {
           <ActiveFiltersBar activeFilters={activeFilters} onClear={resetFilters} onRemove={removeFilter} />
 
           <ImageGrid
-            images={filteredImages}
+            images={images}
             gridSize={gridSize}
             onOpenDetail={openDetailPanel}
+            loading={loading}
+            error={streamError}
             view={view}
           />
 
-          <FooterBar total={images.length} filtered={filteredImages.length} />
+          <FooterBar total={stats.total} filtered={stats.filtered} />
         </section>
 
         <FilterPanel
@@ -296,8 +263,8 @@ function App() {
           onFiltersChange={setPendingFilters}
           onApply={applyPendingFilters}
           onReset={resetFilters}
-          categories={categories}
-          tags={allTags}
+          categories={catalog.categories}
+          tags={catalog.tags}
         />
 
         <DetailPanel
