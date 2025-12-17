@@ -22,7 +22,7 @@ function Header({ filterPanelOpen, onToggleFilterPanel, stats, onSearch, searchV
             <i className="fas fa-search" />
           </span>
           <input
-            value={searchValue}
+            defaultValue={searchValue}
             onChange={(e) => handleSearch(e.target.value)}
             placeholder="Search images, tags, locations..."
             className="w-full pl-10 pr-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
@@ -38,9 +38,10 @@ function Header({ filterPanelOpen, onToggleFilterPanel, stats, onSearch, searchV
         </button>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 min-w-[280px]">
+      <div className="grid grid-cols-3 gap-3 min-w-[320px]">
         <StatCard label="Total" value={stats.total} icon="fa-layer-group" accent="text-indigo-300" />
         <StatCard label="Filtered" value={stats.filtered} icon="fa-magic" accent="text-emerald-300" />
+        <StatCard label="Selected" value={stats.selected} icon="fa-check-double" accent="text-amber-300" />
       </div>
     </header>
   );

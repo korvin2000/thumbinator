@@ -24,14 +24,14 @@ const initialFilters = {
 
 function App() {
   const [images] = useState(() => generateMockImages(60));
-  const [filters, setFilters] = useState(() => ({ ...initialFilters, categories: new Set(), tags: new Set() }));
-  const [pendingFilters, setPendingFilters] = useState(() => ({ ...initialFilters, categories: new Set(), tags: new Set() }));
+  const [filters, setFilters] = useState(initialFilters);
   const [sortBy, setSortBy] = useState('newest');
   const [gridSize, setGridSize] = useState(4);
   const [view, setView] = useState('grid');
   const [filterPanelOpen, setFilterPanelOpen] = useState(false);
   const [detailPanelOpen, setDetailPanelOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
+  const [selectedIds, setSelectedIds] = useState(new Set());
 
   const filteredImages = useMemo(() => {
     let list = [...images];
@@ -141,47 +141,48 @@ function App() {
     setDetailPanelOpen(true);
   };
 
-  const applyFilters = () => {
-    setFilters({
-      ...pendingFilters,
-      categories: new Set(pendingFilters.categories),
-      tags: new Set(pendingFilters.tags)
+  const toggleSelection = (id) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
     });
-    setFilterPanelOpen(false);
   };
 
+  const selectAll = () => setSelectedIds(new Set(filteredImages.map((img) => img.id)));
+  const clearSelection = () => setSelectedIds(new Set());
+
   const resetFilters = () => {
-    const next = { ...initialFilters, categories: new Set(), tags: new Set() };
-    setFilters(next);
-    setPendingFilters(next);
+    setFilters({ ...initialFilters, categories: new Set(), tags: new Set() });
   };
 
   const removeFilter = (type) => {
-    const updates = {
-      search: { search: '' },
-      color: { colorMode: 'all' },
-      resolution: { minResolution: 0 },
-      categories: { categories: new Set() },
-      tags: { tags: new Set() },
-      date: { dateFrom: null, dateTo: null },
-      aspect: { aspectRatio: 'all' }
-    };
-
-    if (updates[type]) {
-      setFilters((prev) => ({ ...prev, ...updates[type] }));
-      setPendingFilters((prev) => ({ ...prev, ...updates[type] }));
+    switch (type) {
+      case 'search':
+        setFilters((prev) => ({ ...prev, search: '' }));
+        break;
+      case 'color':
+        setFilters((prev) => ({ ...prev, colorMode: 'all' }));
+        break;
+      case 'resolution':
+        setFilters((prev) => ({ ...prev, minResolution: 0 }));
+        break;
+      case 'categories':
+        setFilters((prev) => ({ ...prev, categories: new Set() }));
+        break;
+      case 'tags':
+        setFilters((prev) => ({ ...prev, tags: new Set() }));
+        break;
+      case 'date':
+        setFilters((prev) => ({ ...prev, dateFrom: null, dateTo: null }));
+        break;
+      case 'aspect':
+        setFilters((prev) => ({ ...prev, aspectRatio: 'all' }));
+        break;
+      default:
+        break;
     }
   };
-
-  useEffect(() => {
-    if (filterPanelOpen) {
-      setPendingFilters({
-        ...filters,
-        categories: new Set(filters.categories),
-        tags: new Set(filters.tags)
-      });
-    }
-  }, [filterPanelOpen, filters]);
 
   useEffect(() => {
     const updateGrid = () => {
@@ -208,11 +209,8 @@ function App() {
       <Header
         filterPanelOpen={filterPanelOpen}
         onToggleFilterPanel={toggleFilterPanel}
-        stats={{ total: images.length, filtered: filteredImages.length }}
-        onSearch={(value) => {
-          setFilters((prev) => ({ ...prev, search: value }));
-          setPendingFilters((prev) => ({ ...prev, search: value }));
-        }}
+        stats={{ total: images.length, filtered: filteredImages.length, selected: selectedIds.size }}
+        onSearch={(value) => setFilters((prev) => ({ ...prev, search: value }))}
         searchValue={filters.search}
       />
 
@@ -225,6 +223,9 @@ function App() {
             sortBy={sortBy}
             view={view}
             onViewChange={setView}
+            onSelectAll={selectAll}
+            onClearSelection={clearSelection}
+            selectedCount={selectedIds.size}
           />
 
           <ActiveFiltersBar activeFilters={activeFilters} onClear={resetFilters} onRemove={removeFilter} />
@@ -232,6 +233,8 @@ function App() {
           <ImageGrid
             images={filteredImages}
             gridSize={gridSize}
+            selectedIds={selectedIds}
+            onToggleSelect={toggleSelection}
             onOpenDetail={openDetailPanel}
             view={view}
           />
@@ -242,10 +245,8 @@ function App() {
         <FilterPanel
           isOpen={filterPanelOpen}
           onClose={toggleFilterPanel}
-          filters={pendingFilters}
-          onFiltersChange={setPendingFilters}
-          onApplyFilters={applyFilters}
-          onClearAll={resetFilters}
+          filters={filters}
+          onFiltersChange={setFilters}
           categories={categories}
           tags={allTags}
         />
@@ -260,7 +261,7 @@ function App() {
       </main>
 
       <div
-        className={`fixed inset-0 bg-black/50 transition-opacity ${
+        className={`fixed inset-0 bg-black/40 backdrop-blur-sm transition-opacity ${
           overlayVisible ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
         }`}
         onClick={() => {
