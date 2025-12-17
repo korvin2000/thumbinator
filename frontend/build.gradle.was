@@ -10,6 +10,13 @@ node {
     npmWorkDir = file(".gradle/npm")
 }
 
+tasks.register("npmInstall", com.github.gradle.node.npm.task.NpmTask) {
+    group = "build"
+    args = ["install"]
+    inputs.file("package.json")
+    outputs.dir("node_modules")
+}
+
 tasks.register("buildFrontend", com.github.gradle.node.npm.task.NpmTask) {
     dependsOn("npmInstall")
     group = "build"

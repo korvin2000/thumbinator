@@ -39,3 +39,15 @@ tasks.named("bootJar") {
 tasks.named("jar") {
     enabled = false
 }
+
+tasks.withType(JavaCompile) {
+    options.compilerArgs += "--enable-preview"
+}
+
+tasks.withType(Test) {
+    jvmArgs += "--enable-preview"
+}
+
+tasks.withType(JavaExec) {
+    jvmArgs += '--enable-preview'
+}
