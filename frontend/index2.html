@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Gallery Pro - Advanced Thumbnail Viewer & Organizer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        .thumbnail-container {
+            aspect-ratio: 16/9;
+            position: relative;
+            overflow: hidden;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .thumbnail-container:hover {
+            transform: scale(1.05);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            z-index: 10;
+        }
+        
+        .thumbnail-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: all 0.3s ease;
+        }
+        
+        .thumbnail-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
+            color: white;
+            padding: 12px;
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+        }
+        
+        .thumbnail-container:hover .thumbnail-overlay {
+            transform: translateY(0);
+        }
+        
+        .slide-panel {
+            transform: translateX(100%);
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .slide-panel.active {
+            transform: translateX(0);
+        }
+        
+        .info-panel {
+            transform: translateX(-100%);
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .info-panel.active {
+            transform: translateX(0);
+        }
+        
+        .tag-chip {
+            transition: all 0.2s ease;
+        }
+        
+        .tag-chip:hover {
+            transform: scale(1.05);
+        }
+        
+        .search-highlight {
+            background: linear-gradient(120deg, #ffd700 0%, #ffed4e 100%);
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+        
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .gradient-border {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 2px;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        .loading-skeleton {
+            animation: pulse 2s infinite;
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
+        
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 10px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-white shadow-lg sticky top-0 z-40">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <i class="fas fa-images text-3xl text-purple-600"></i>
+                    <h1 class="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                        Image Gallery Pro
+                    </h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span id="imageCount" class="text-sm text-gray-600"></span>
+                    <button onclick="toggleSearchPanel()" class="px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:shadow-lg transition-all duration-300 transform hover:scale-105">
+                        <i class="fas fa-search mr-2"></i>Advanced Search
+                    </button>
+                    <button onclick="toggleViewMode()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-all duration-300">
+                        <i class="fas fa-th-large mr-2"></i>
+                        <span id="viewModeText">Grid</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Quick Search Bar -->
+    <div class="bg-white border-b sticky top-16 z-30">
+        <div class="container mx-auto px-4 py-3">
+            <div class="flex items-center space-x-4">
+                <div class="flex-1 relative">
+                    <input 
+                        type="text" 
+                        id="quickSearch" 
+                        placeholder="Quick search images..."
+                        class="w-full px-4 py-2 pl-10 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        oninput="performQuickSearch()"
+                    >
+                    <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                </div>
+                <select id="sortBy" onchange="sortImages()" class="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    <option value="name">Sort by Name</option>
+                    <option value="size">Sort by Size (Largest First)</option>
+                    <option value="date">Sort by Date (Newest First)</option>
+                    <option value="resolution">Sort by Resolution</option>
+                </select>
+                <select id="itemsPerRow" onchange="updateItemsPerRow()" class="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    <option value="3">3 per row</option>
+                    <option value="4" selected>4 per row</option>
+                    <option value="5">5 per row</option>
+                    <option value="6">6 per row</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-6 relative">
+        <div id="imageGrid" class="grid gap-4 transition-all duration-300">
+            <!-- Images will be dynamically inserted here -->
+        </div>
+    </main>
+
+    <!-- Advanced Search Panel (Right Slide-out) -->
+    <div id="searchPanel" class="slide-panel fixed right-0 top-0 h-full w-96 bg-white shadow-2xl z-50 overflow-y-auto custom-scrollbar">
+        <div class="p-6">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-xl font-bold text-gray-800">Advanced Search</h2>
+                <button onclick="toggleSearchPanel()" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <!-- Search Input -->
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Search Text</label>
+                <input 
+                    type="text" 
+                    id="searchText" 
+                    placeholder="Search in filename, tags..."
+                    class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    oninput="applyFilters()"
+                >
+            </div>
+
+            <!-- Image Type Filter -->
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Image Type</label>
+                <div class="space-y-2">
+                    <label class="flex items-center">
+                        <input type="checkbox" id="filterColor" onchange="applyFilters()" class="mr-2 text-purple-600">
+                        <span>Color Images Only</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="checkbox" id="filterBW" onchange="applyFilters()" class="mr-2 text-purple-600">
+                        <span>Black & White Images</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Resolution Filter -->
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Minimum Resolution</label>
+                <select id="minResolution" onchange="applyFilters()" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    <option value="any">Any Resolution</option>
+                    <option value="hd">HD (720p+)</option>
+                    <option value="fullhd">Full HD (1080p+)</option>
+                    <option value="4k">4K (2160p+)</option>
+                    <option value="8k">8K (4320p+)</option>
+                </select>
+            </div>
+
+            <!-- Category Filter -->
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Category</label>
+                <select id="categoryFilter" onchange="applyFilters()" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    <option value="all">All Categories</option>
+                    <option value="nature">Nature</option>
+                    <option value="architecture">Architecture</option>
+                    <option value="people">People</option>
+                    <option value="technology">Technology</option>
+                    <option value="animals">Animals</option>
+                    <option value="food">Food</option>
+                </select>
+            </div>
+
+            <!-- Tags Filter -->
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Tags</label>
+                <div id="tagsContainer" class="flex flex-wrap gap-2">
+                    <!-- Tags will be dynamically inserted here -->
+                </div>
+            </div>
+
+            <!-- File Size Filter -->
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Maximum File Size</label>
+                <select id="maxFileSize" onchange="applyFilters()" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    <option value="any">Any Size</option>
+                    <option value="1mb">Up to 1 MB</option>
+                    <option value="5mb">Up to 5 MB</option>
+                    <option value="10mb">Up to 10 MB</option>
+                    <option value="50mb">Up to 50 MB</option>
+                </select>
+            </div>
+
+            <!-- Apply Filters Button -->
+            <button onclick="applyFilters()" class="w-full py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:shadow-lg transition-all duration-300 transform hover:scale-105">
+                <i class="fas fa-filter mr-2"></i>Apply Filters
+            </button>
+
+            <!-- Reset Filters Button -->
+            <button onclick="resetFilters()" class="w-full mt-3 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-all duration-300">
+                <i class="fas fa-undo mr-2"></i>Reset All Filters
+            </button>
+        </div>
+    </div>
+
+    <!-- Image Info Panel (Left Slide-out) -->
+    <div id="infoPanel" class="info-panel fixed left-0 top-0 h-full w-80 bg-white shadow-2xl z-50 overflow-y-auto custom-scrollbar">
+        <div class="p-6">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-xl font-bold text-gray-800">Image Details</h2>
+                <button onclick="closeInfoPanel()" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div id="infoPanelContent">
+                <!-- Image details will be dynamically inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Overlay for panels -->
+    <div id="overlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden" onclick="closeAllPanels()"></div>
+
+    <script>
+        // State management
+        let state = {
+            images: [],
+            filteredImages: [],
+            selectedImage: null,
+            selectedTags: new Set(),
+            viewMode: 'grid',
+            itemsPerRow: 4
+        };
+
+        // Available tags
+        const availableTags = [
+            'landscape', 'portrait', 'sunset', 'nature', 'urban', 'vintage',
+            'modern', 'abstract', 'colorful', 'minimalist', 'dramatic', 'peaceful',
+            'adventure', 'travel', 'food', 'architecture', 'wildlife', 'ocean'
+        ];
+
+        // Initialize dummy data
+        function generateDummyData() {
+            const categories = ['nature', 'architecture', 'people', 'technology', 'animals', 'food'];
+            const names = [
+                'Sunset Mountains', 'City Skyline', 'Forest Path', 'Ocean Waves', 'Desert Dunes',
+                'Modern Building', 'Street Art', 'Coffee Cup', 'Laptop Setup', 'Mountain Lake',
+                'Autumn Leaves', 'Winter Snow', 'Spring Flowers', 'Summer Beach', 'Night City',
+                'Bridge View', 'Garden Path', 'Tech Office', 'Wild Animals', 'Food Market'
+            ];
+            
+            const images = [];
+            for (let i = 1; i <= 50; i++) {
+                const width = 1920 + Math.floor(Math.random() * 2000);
+                const height = 1080 + Math.floor(Math.random() * 1000);
+                const isColor = Math.random() > 0.2;
+                const category = categories[Math.floor(Math.random() * categories.length)];
+                const tags = [];
+                const numTags = 2 + Math.floor(Math.random() * 4);
+                for (let j = 0; j < numTags; j++) {
+                    const tag = availableTags[Math.floor(Math.random() * availableTags.length)];
+                    if (!tags.includes(tag)) tags.push(tag);
+                }
+                
+                images.push({
+                    id: i,
+                    name: `${names[i % names.length]} ${i}`,
+                    filename: `image_${i}.jpg`,
+                    width: width,
+                    height: height,
+                    size: Math.floor(Math.random() * 10000000) + 100000,
+                    category: category,
+                    tags: tags,
+                    isColor: isColor,
+                    date: new Date(Date.now() - Math.random() * 365 * 24 * 60 * 60 * 1000),
+                    description: `Beautiful ${category} image with ${tags.join(', ')} characteristics`,
+                    url: `https://picsum.photos/seed/img${i}/${width}/${height}.jpg`
+                });
+            }
+            return images;
+        }
+
+        // Initialize the application
+        function init() {
+            state.images = generateDummyData();
+            state.filteredImages = [...state.images];
+            renderTags();
+            renderImages();
+            updateImageCount();
+        }
+
+        // Render available tags
+        function renderTags() {
+            const container = document.getElementById('tagsContainer');
+            container.innerHTML = availableTags.map(tag => `
+                <label class="tag-chip inline-flex items-center px-3 py-1 rounded-full text-sm cursor-pointer transition-all ${
+                    state.selectedTags.has(tag) 
+                        ? 'bg-purple-600 text-white' 
+                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }">
+                    <input 
+                        type="checkbox" 
+                        value="${tag}" 
+                        ${state.selectedTags.has(tag) ? 'checked' : ''}
+                        onchange="toggleTag('${tag}')"
+                        class="hidden"
+                    >
+                    <span>${tag}</span>
+                </label>
+            `).join('');
+        }
+
+        // Toggle tag selection
+        function toggleTag(tag) {
+            if (state.selectedTags.has(tag)) {
+                state.selectedTags.delete(tag);
+            } else {
+                state.selectedTags.add(tag);
+            }
+            renderTags();
+            applyFilters();
+        }
+
+        // Render images grid
+        function renderImages() {
+            const grid = document.getElementById('imageGrid');
+            const cols = state.itemsPerRow;
+            grid.className = `grid gap-4 transition-all duration-300 grid-cols-${cols}`;
+            
+            grid.innerHTML = state.filteredImages.map(image => `
+                <div class="thumbnail-container rounded-lg cursor-pointer group" 
+                     onclick="selectImage(${image.id})"
+                     onmouseenter="showImageInfo(${image.id})"
+                     onmouseleave="hideImageInfo()">
+                    <img src="${image.url}" alt="${image.name}" class="thumbnail-image">
+                    <div class="absolute top-2 left-2 bg-black bg-opacity-70 text-white px-2 py-1 rounded text-xs">
+                        ${image.width}x${image.height}
+                    </div>
+                    <div class="absolute top-2 right-2 bg-black bg-opacity-70 text-white px-2 py-1 rounded text-xs">
+                        ${formatFileSize(image.size)}
+                    </div>
+                    <div class="thumbnail-overlay">
+                        <h3 class="font-semibold text-sm mb-1">${image.name}</h3>
+                        <div class="flex flex-wrap gap-1">
+                            ${image.tags.slice(0, 3).map(tag => `
+                                <span class="text-xs bg-white bg-opacity-20 px-2 py-0.5 rounded">${tag}</span>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Format file size
+        function formatFileSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            if (bytes < 1024 * 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+            return (bytes / (1024 * 1024 * 1024)).toFixed(2) + ' GB';
+        }
+
+        // Show image info on hover
+        function showImageInfo(imageId) {
+            const image = state.images.find(img => img.id === imageId);
+            if (!image) return;
+            
+            // Could implement a tooltip here if needed
+        }
+
+        // Hide image info
+        function hideImageInfo() {
+            // Hide tooltip
+        }
+
+        // Select image and show details
+        function selectImage(imageId) {
+            state.selectedImage = state.images.find(img => img.id === imageId);
+            if (!state.selectedImage) return;
+            
+            const content = document.getElementById('infoPanelContent');
+            content.innerHTML = `
+                <div class="space-y-4">
+                    <img src="${state.selectedImage.url}" alt="${state.selectedImage.name}" class="w-full rounded-lg shadow-lg">
+                    <div>
+                        <h3 class="text-lg font-semibold mb-2">${state.selectedImage.name}</h3>
+                        <p class="text-gray-600 text-sm">${state.selectedImage.description}</p>
+                    </div>
+                    <div class="space-y-2">
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Filename:</span>
+                            <span class="font-medium">${state.selectedImage.filename}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Resolution:</span>
+                            <span class="font-medium">${state.selectedImage.width} × ${state.selectedImage.height}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">File Size:</span>
+                            <span class="font-medium">${formatFileSize(state.selectedImage.size)}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Category:</span>
+                            <span class="font-medium capitalize">${state.selectedImage.category}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Type:</span>
+                            <span class="font-medium">${state.selectedImage.isColor ? 'Color' : 'Black & White'}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Date Added:</span>
+                            <span class="font-medium">${state.selectedImage.date.toLocaleDateString()}</span>
+                        </div>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold mb-2">Tags</h4>
+                        <div class="flex flex-wrap gap-2">
+                            ${state.selectedImage.tags.map(tag => `
+                                <span class="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm">${tag}</span>
+                            `).join('')}
+                        </div>
+                    </div>
+                    <div class="pt-4 space-y-2">
+                        <button class="w-full py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                            <i class="fas fa-download mr-2"></i>Download
+                        </button>
+                        <button class="w-full py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+                            <i class="fas fa-share mr-2"></i>Share
+                        </button>
+                        <button class="w-full py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+                            <i class="fas fa-trash mr-2"></i>Delete
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('infoPanel').classList.add('active');
+            document.getElementById('overlay').classList.remove('hidden');
+        }
+
+        // Close info panel
+        function closeInfoPanel() {
+            document.getElementById('infoPanel').classList.remove('active');
+            document.getElementById('overlay').classList.add('hidden');
+        }
+
+        // Toggle search panel
+        function toggleSearchPanel() {
+            const panel = document.getElementById('searchPanel');
+            const overlay = document.getElementById('overlay');
+            
+            if (panel.classList.contains('active')) {
+                panel.classList.remove('active');
+                overlay.classList.add('hidden');
+            } else {
+                panel.classList.add('active');
+                overlay.classList.remove('hidden');
+            }
+        }
+
+        // Close all panels
+        function closeAllPanels() {
+            document.getElementById('searchPanel').classList.remove('active');
+            document.getElementById('infoPanel').classList.remove('active');
+            document.getElementById('overlay').classList.add('hidden');
+        }
+
+        // Apply filters
+        function applyFilters() {
+            const searchText = document.getElementById('searchText').value.toLowerCase();
+            const filterColor = document.getElementById('filterColor').checked;
+            const filterBW = document.getElementById('filterBW').checked;
+            const minResolution = document.getElementById('minResolution').value;
+            const categoryFilter = document.getElementById('categoryFilter').value;
+            const maxFileSize = document.getElementById('maxFileSize').value;
+            
+            state.filteredImages = state.images.filter(image => {
+                // Text search
+                if (searchText && !image.name.toLowerCase().includes(searchText) && 
+                    !image.tags.some(tag => tag.toLowerCase().includes(searchText))) {
+                    return false;
+                }
+                
+                // Color filter
+                if (filterColor && !image.isColor) return false;
+                if (filterBW && image.isColor) return false;
+                
+                // Resolution filter
+                const totalPixels = image.width * image.height;
+                if (minResolution === 'hd' && totalPixels < 1280 * 720) return false;
+                if (minResolution === 'fullhd' && totalPixels < 1920 * 1080) return false;
+                if (minResolution === '4k' && totalPixels < 3840 * 2160) return false;
+                if (minResolution === '8k' && totalPixels < 7680 * 4320) return false;
+                
+                // Category filter
+                if (categoryFilter !== 'all' && image.category !== categoryFilter) return false;
+                
+                // Tags filter
+                if (state.selectedTags.size > 0) {
+                    const hasAllTags = Array.from(state.selectedTags).every(tag => 
+                        image.tags.includes(tag)
+                    );
+                    if (!hasAllTags) return false;
+                }
+                
+                // File size filter
+                const sizeMB = image.size / (1024 * 1024);
+                if (maxFileSize === '1mb' && sizeMB > 1) return false;
+                if (maxFileSize === '5mb' && sizeMB > 5) return false;
+                if (maxFileSize === '10mb' && sizeMB > 10) return false;
+                if (maxFileSize === '50mb' && sizeMB > 50) return false;
+                
+                return true;
+            });
+            
+            renderImages();
+            updateImageCount();
+        }
+
+        // Quick search
+        function performQuickSearch() {
+            const searchText = document.getElementById('quickSearch').value.toLowerCase();
+            
+            if (!searchText) {
+                state.filteredImages = [...state.images];
+            } else {
+                state.filteredImages = state.images.filter(image => 
+                    image.name.toLowerCase().includes(searchText) ||
+                    image.tags.some(tag => tag.toLowerCase().includes(searchText)) ||
+                    image.category.toLowerCase().includes(searchText)
+                );
+            }
+            
+            renderImages();
+            updateImageCount();
+        }
+
+        // Sort images
+        function sortImages() {
+            const sortBy = document.getElementById('sortBy').value;
+            
+            state.filteredImages.sort((a, b) => {
+                switch(sortBy) {
+                    case 'name':
+                        return a.name.localeCompare(b.name);
+                    case 'size':
+                        return b.size - a.size;
+                    case 'date':
+                        return b.date - a.date;
+                    case 'resolution':
+                        return (b.width * b.height) - (a.width * a.height);
+                    default:
+                        return 0;
+                }
+            });
+            
+            renderImages();
+        }
+
+        // Update items per row
+        function updateItemsPerRow() {
+            state.itemsPerRow = parseInt(document.getElementById('itemsPerRow').value);
+            renderImages();
+        }
+
+        // Toggle view mode
+        function toggleViewMode() {
+            const viewModeText = document.getElementById('viewModeText');
+            if (state.viewMode === 'grid') {
+                state.viewMode = 'list';
+                viewModeText.textContent = 'List';
+                // Could implement list view here
+            } else {
+                state.viewMode = 'grid';
+                viewModeText.textContent = 'Grid';
+            }
+            renderImages();
+        }
+
+        // Reset all filters
+        function resetFilters() {
+            document.getElementById('searchText').value = '';
+            document.getElementById('filterColor').checked = false;
+            document.getElementById('filterBW').checked = false;
+            document.getElementById('minResolution').value = 'any';
+            document.getElementById('categoryFilter').value = 'all';
+            document.getElementById('maxFileSize').value = 'any';
+            document.getElementById('quickSearch').value = '';
+            
+            state.selectedTags.clear();
+            state.filteredImages = [...state.images];
+            
+            renderTags();
+            renderImages();
+            updateImageCount();
+        }
+
+        // Update image count
+        function updateImageCount() {
+            const count = document.getElementById('imageCount');
+            count.textContent = `Showing ${state.filteredImages.length} of ${state.images.length} images`;
+        }
+
+        // Initialize app on load
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

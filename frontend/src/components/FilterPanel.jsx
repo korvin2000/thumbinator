@@ -187,6 +187,16 @@ function FilterPanel({ isOpen, onClose, filters, onFiltersChange, categories, ta
             <option value="21:9">21:9</option>
           </select>
         </div>
+                <!-- Action Buttons -->
+                <div class="flex gap-3 pt-4 border-t border-slate-700">
+                    <button onclick="applyFilters()" class="flex-1 px-4 py-3 bg-indigo-600 hover:bg-indigo-700 rounded-xl font-medium transition-colors">
+                        <i class="fas fa-check mr-2"></i>Apply Filters
+                    </button>
+                    <button onclick="clearAllFilters()" class="px-4 py-3 bg-slate-700 hover:bg-slate-600 rounded-xl transition-colors">
+                        <i class="fas fa-undo"></i>
+                    </button>
+                </div>
+
       </div>
     </aside>
   );
