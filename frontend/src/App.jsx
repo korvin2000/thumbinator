@@ -151,13 +151,14 @@ function App() {
       closeTimerRef.current = null;
     }
 
-    if (selectedImage?.id === image.id) {
+    const isSameImage = selectedImage?.id === image.id;
+
+    if (isSameImage) {
       if (detailPanelOpen) {
         closeDetailPanel();
         return;
       }
 
-      setSelectedImage(image);
       setDetailPanelOpen(true);
       return;
     }
@@ -248,6 +249,7 @@ function App() {
   }, []);
 
   const overlayVisible = filterPanelOpen || detailPanelOpen;
+  const overlayInteractive = filterPanelOpen;
   const activeFilterCount = activeFilters.length;
   const hasActiveFilters = activeFilterCount > 0;
 
@@ -309,11 +311,10 @@ function App() {
 
       <div
         className={`fixed inset-0 bg-black/35 transition-opacity ${
-          overlayVisible ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
-        }`}
+          overlayVisible ? 'opacity-100' : 'opacity-0'
+        } ${overlayInteractive ? 'pointer-events-auto' : 'pointer-events-none'}`}
         onClick={() => {
           if (filterPanelOpen) setFilterPanelOpen(false);
-          if (detailPanelOpen) closeDetailPanel();
         }}
       />
     </div>
