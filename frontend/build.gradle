@@ -1,0 +1,36 @@
+plugins {
+    id "com.github.node-gradle.node"
+}
+
+node {
+    download = true
+    version = "20.17.0"
+    npmVersion = "10.8.2"
+    workDir = file(".gradle/nodejs")
+    npmWorkDir = file(".gradle/npm")
+}
+
+tasks.register("npmInstall", com.github.gradle.node.npm.task.NpmTask) {
+    group = "build"
+    args = ["install"]
+    inputs.file("package.json")
+    outputs.dir("node_modules")
+}
+
+tasks.register("buildFrontend", com.github.gradle.node.npm.task.NpmTask) {
+    dependsOn("npmInstall")
+    group = "build"
+    args = ["run", "build"]
+    inputs.dir("src")
+    inputs.file("package.json")
+    inputs.file("vite.config.js")
+    outputs.dir(layout.buildDirectory.dir("dist"))
+}
+
+tasks.register("cleanFrontend") {
+    group = "build"
+    doLast {
+        delete("node_modules")
+        delete(layout.buildDirectory)
+    }
+}
