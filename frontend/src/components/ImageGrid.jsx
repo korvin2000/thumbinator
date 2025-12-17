@@ -1,7 +1,7 @@
 import React from 'react';
 import ImageCard from './ImageCard.jsx';
 
-function ImageGrid({ images, gridSize, selectedIds, onToggleSelect, onOpenDetail, view }) {
+function ImageGrid({ images, gridSize, onOpenDetail, view }) {
   if (!images.length) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center text-center py-20">
@@ -21,8 +21,6 @@ function ImageGrid({ images, gridSize, selectedIds, onToggleSelect, onOpenDetail
           <ImageCard
             key={img.id}
             image={img}
-            selected={selectedIds.has(img.id)}
-            onToggleSelect={() => onToggleSelect(img.id)}
             onOpenDetail={() => onOpenDetail(img)}
           />
         ))}
