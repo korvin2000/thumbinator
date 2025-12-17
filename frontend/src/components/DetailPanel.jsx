@@ -5,7 +5,12 @@ function DetailPanel({ isOpen, image, onClose, formatDate, formatDateTime }) {
   if (!image) return null;
 
   return (
-    <aside className={`detail-panel fixed left-0 top-0 h-full w-96 bg-slate-900/95 backdrop-blur-xl border-r border-slate-700/50 z-40 overflow-y-auto ${isOpen ? 'open' : ''}`}>
+    <aside
+      className={`detail-panel fixed left-0 top-0 h-full w-96 bg-slate-900/90 border-r border-slate-700/60 shadow-2xl z-40 overflow-y-auto ${
+        isOpen ? 'open' : ''
+      }`}
+      aria-hidden={!isOpen}
+    >
       <div className="p-6 space-y-6">
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-semibold text-white">Image Details</h2>

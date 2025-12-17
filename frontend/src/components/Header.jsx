@@ -38,10 +38,9 @@ function Header({ filterPanelOpen, onToggleFilterPanel, stats, onSearch, searchV
         </button>
       </div>
 
-      <div className="grid grid-cols-3 gap-3 min-w-[320px]">
+      <div className="grid grid-cols-2 gap-3 min-w-[220px]">
         <StatCard label="Total" value={stats.total} icon="fa-layer-group" accent="text-indigo-300" />
         <StatCard label="Filtered" value={stats.filtered} icon="fa-magic" accent="text-emerald-300" />
-        <StatCard label="Selected" value={stats.selected} icon="fa-check-double" accent="text-amber-300" />
       </div>
     </header>
   );
