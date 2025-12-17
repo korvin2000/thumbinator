@@ -132,15 +132,13 @@ body {
 }
 
 .detail-panel {
-  transform: translateX(-105%);
-  transition: transform 0.25s ease, opacity 0.2s ease;
-  opacity: 0;
+  transform: translateX(-100%);
+  transition: transform 0.25s ease;
   will-change: transform;
 }
 
 .detail-panel.open {
   transform: translateX(0);
-  opacity: 1;
 }
 
 /* Custom Checkbox & Radio */
