@@ -124,21 +124,26 @@ body {
 /* Slide Panel */
 .slide-panel {
   transform: translateX(100%);
-  transition: transform 0.25s ease;
+  opacity: 0;
+  transition: transform 0.28s ease, opacity 0.28s ease;
+  will-change: transform, opacity;
 }
 
 .slide-panel.open {
   transform: translateX(0);
+  opacity: 1;
 }
 
 .detail-panel {
   transform: translateX(-100%);
-  transition: transform 0.25s ease;
-  will-change: transform;
+  opacity: 0;
+  transition: transform 0.28s ease, opacity 0.28s ease;
+  will-change: transform, opacity;
 }
 
 .detail-panel.open {
   transform: translateX(0);
+  opacity: 1;
 }
 
 /* Custom Checkbox & Radio */
