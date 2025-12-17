@@ -56,13 +56,13 @@ body {
   border-radius: 12px;
   overflow: hidden;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 6px 14px -8px rgba(0, 0, 0, 0.45);
 }
 
 .thumbnail-card:hover {
-  transform: translateY(-4px) scale(1.02);
-  box-shadow: 0 20px 40px -10px rgba(99, 102, 241, 0.3);
+  transform: translateY(-2px) scale(1.01);
+  box-shadow: 0 12px 30px -12px rgba(99, 102, 241, 0.2);
   z-index: 10;
 }
 
@@ -70,19 +70,19 @@ body {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.5s ease;
+  transition: transform 0.25s ease;
 }
 
 .thumbnail-card:hover img {
-  transform: scale(1.1);
+  transform: scale(1.03);
 }
 
 .thumbnail-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.3) 50%, transparent 100%);
+  background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.25) 55%, transparent 100%);
   opacity: 0;
-  transition: opacity 0.3s ease;
+  transition: opacity 0.2s ease;
 }
 
 .thumbnail-card:hover .thumbnail-overlay {
@@ -97,7 +97,7 @@ body {
   padding: 16px;
   transform: translateY(20px);
   opacity: 0;
-  transition: all 0.3s ease;
+  transition: transform 0.25s ease, opacity 0.25s ease;
 }
 
 .thumbnail-card:hover .thumbnail-info {
@@ -113,7 +113,7 @@ body {
   display: flex;
   justify-content: space-between;
   opacity: 0;
-  transition: opacity 0.3s ease;
+  transition: opacity 0.2s ease;
 }
 
 .thumbnail-card:hover .thumbnail-label {
@@ -123,7 +123,7 @@ body {
 /* Slide Panel */
 .slide-panel {
   transform: translateX(100%);
-  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.3s ease;
 }
 
 .slide-panel.open {
@@ -131,12 +131,15 @@ body {
 }
 
 .detail-panel {
-  transform: translateX(-100%);
-  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: translateX(-104%);
+  opacity: 0;
+  transition: transform 0.25s ease, opacity 0.25s ease;
+  will-change: transform;
 }
 
 .detail-panel.open {
   transform: translateX(0);
+  opacity: 1;
 }
 
 /* Custom Checkbox & Radio */
@@ -204,17 +207,6 @@ body {
 .res-4k { background: linear-gradient(135deg, #f59e0b, #d97706); }
 .res-8k { background: linear-gradient(135deg, #10b981, #059669); }
 .res-hd { background: linear-gradient(135deg, #6366f1, #4f46e5); }
-
-/* Pulse Animation */
-@keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4); }
-  50% { box-shadow: 0 0 20px 5px rgba(99, 102, 241, 0.2); }
-}
-
-.selected-card {
-  animation: pulse-glow 2s infinite;
-  border: 2px solid var(--primary);
-}
 
 /* Tooltip */
 .tooltip {
@@ -293,11 +285,11 @@ input[type="range"]::-webkit-slider-thumb:hover {
 
 /* Fade animations */
 .fade-in {
-  animation: fadeIn 0.3s ease forwards;
+  animation: fadeIn 0.2s ease forwards;
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
+  from { opacity: 0; transform: translateY(6px); }
   to { opacity: 1; transform: translateY(0); }
 }
 

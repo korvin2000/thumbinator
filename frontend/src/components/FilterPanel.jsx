@@ -1,7 +1,7 @@
 import React from 'react';
 import { resolutionLabels } from '../data/utils.js';
 
-function FilterPanel({ isOpen, onClose, filters, onFiltersChange, categories, tags }) {
+function FilterPanel({ isOpen, onClose, filters, onFiltersChange, onApplyFilters, onClearAll, categories, tags }) {
   const updateFilter = (key, value) => onFiltersChange((prev) => ({ ...prev, [key]: value }));
 
   const toggleCategory = (category) => {
@@ -21,7 +21,7 @@ function FilterPanel({ isOpen, onClose, filters, onFiltersChange, categories, ta
   };
 
   return (
-    <aside className={`slide-panel fixed right-0 top-0 h-full w-80 lg:w-96 bg-slate-900/95 backdrop-blur-xl border-l border-slate-700/50 z-40 overflow-y-auto ${isOpen ? 'open' : ''}`}>
+    <aside className={`slide-panel fixed right-0 top-0 h-full w-80 lg:w-96 bg-slate-900/90 backdrop-blur-md border-l border-slate-700/50 z-40 overflow-y-auto ${isOpen ? 'open' : ''}`}>
       <div className="p-6">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-semibold text-white">
@@ -34,7 +34,7 @@ function FilterPanel({ isOpen, onClose, filters, onFiltersChange, categories, ta
 
         <div className="mb-6">
           <label className="block text-sm font-medium text-slate-300 mb-2">
-            <i className="fas fa-search mr-2 text-slate-400" />Live Search
+            <i className="fas fa-search mr-2 text-slate-400" />Search
           </label>
           <input
             type="text"
@@ -187,15 +187,15 @@ function FilterPanel({ isOpen, onClose, filters, onFiltersChange, categories, ta
             <option value="21:9">21:9</option>
           </select>
         </div>
-                <!-- Action Buttons -->
-                <div class="flex gap-3 pt-4 border-t border-slate-700">
-                    <button onclick="applyFilters()" class="flex-1 px-4 py-3 bg-indigo-600 hover:bg-indigo-700 rounded-xl font-medium transition-colors">
-                        <i class="fas fa-check mr-2"></i>Apply Filters
-                    </button>
-                    <button onclick="clearAllFilters()" class="px-4 py-3 bg-slate-700 hover:bg-slate-600 rounded-xl transition-colors">
-                        <i class="fas fa-undo"></i>
-                    </button>
-                </div>
+
+        <div className="flex gap-3 pt-4 border-t border-slate-700">
+          <button onClick={onApplyFilters} className="flex-1 px-4 py-3 bg-indigo-600 hover:bg-indigo-700 rounded-xl font-medium transition-colors">
+            <i className="fas fa-check mr-2" />Apply Filters
+          </button>
+          <button onClick={onClearAll} className="px-4 py-3 bg-slate-700 hover:bg-slate-600 rounded-xl transition-colors">
+            <i className="fas fa-undo" />
+          </button>
+        </div>
 
       </div>
     </aside>
