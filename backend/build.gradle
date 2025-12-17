@@ -1,0 +1,41 @@
+plugins {
+    id "org.springframework.boot"
+    id "io.spring.dependency-management"
+    id "java"
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_21
+}
+
+dependencies {
+    implementation "org.springframework.boot:spring-boot-starter-web"
+
+    developmentOnly "org.springframework.boot:spring-boot-devtools"
+
+    testImplementation "org.springframework.boot:spring-boot-starter-test"
+}
+
+tasks.named("test") {
+    useJUnitPlatform()
+}
+
+def frontendDist = project(":frontend").layout.buildDirectory.dir("dist")
+
+tasks.register("copyFrontend", Copy) {
+    dependsOn(":frontend:buildFrontend")
+    from(frontendDist)
+    into(layout.buildDirectory.dir("resources/main/static"))
+}
+
+tasks.named("processResources") {
+    dependsOn("copyFrontend")
+}
+
+tasks.named("bootJar") {
+    dependsOn("copyFrontend")
+}
+
+tasks.named("jar") {
+    enabled = false
+}
