@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import ActiveFiltersBar from './components/ActiveFiltersBar.jsx';
 import DetailPanel from './components/DetailPanel.jsx';
 import FilterPanel from './components/FilterPanel.jsx';
@@ -9,29 +9,34 @@ import Toolbar from './components/Toolbar.jsx';
 import { allTags, categories, generateMockImages } from './data/mockData.js';
 import { activeResolutionLabels, formatDate, formatDateTime, resolutionThresholds } from './data/utils.js';
 
-const initialFilters = {
+const baseFilters = {
   search: '',
   colorMode: 'all',
   minResolution: 0,
   minSize: null,
   maxSize: null,
-  categories: new Set(),
-  tags: new Set(),
   dateFrom: null,
   dateTo: null,
   aspectRatio: 'all'
 };
 
+const createFilterState = () => ({
+  ...baseFilters,
+  categories: new Set(),
+  tags: new Set()
+});
+
 function App() {
   const [images] = useState(() => generateMockImages(60));
-  const [filters, setFilters] = useState(initialFilters);
+  const [filters, setFilters] = useState(createFilterState);
+  const [pendingFilters, setPendingFilters] = useState(createFilterState);
   const [sortBy, setSortBy] = useState('newest');
   const [gridSize, setGridSize] = useState(4);
   const [view, setView] = useState('grid');
   const [filterPanelOpen, setFilterPanelOpen] = useState(false);
   const [detailPanelOpen, setDetailPanelOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
-  const [selectedIds, setSelectedIds] = useState(new Set());
+  const closeTimerRef = useRef(null);
 
   const filteredImages = useMemo(() => {
     let list = [...images];
@@ -133,56 +138,84 @@ function App() {
   const toggleFilterPanel = () => setFilterPanelOpen((prev) => !prev);
   const closeDetailPanel = () => {
     setDetailPanelOpen(false);
-    setSelectedImage(null);
+    if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+    closeTimerRef.current = setTimeout(() => {
+      setSelectedImage(null);
+      closeTimerRef.current = null;
+    }, 240);
   };
 
   const openDetailPanel = (image) => {
+    if (closeTimerRef.current) {
+      clearTimeout(closeTimerRef.current);
+      closeTimerRef.current = null;
+    }
     setSelectedImage(image);
     setDetailPanelOpen(true);
   };
 
-  const toggleSelection = (id) => {
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
-  };
-
-  const selectAll = () => setSelectedIds(new Set(filteredImages.map((img) => img.id)));
-  const clearSelection = () => setSelectedIds(new Set());
-
   const resetFilters = () => {
-    setFilters({ ...initialFilters, categories: new Set(), tags: new Set() });
+    const cleared = createFilterState();
+    setFilters(cleared);
+    setPendingFilters(cleared);
   };
 
   const removeFilter = (type) => {
     switch (type) {
       case 'search':
         setFilters((prev) => ({ ...prev, search: '' }));
+        setPendingFilters((prev) => ({ ...prev, search: '' }));
         break;
       case 'color':
         setFilters((prev) => ({ ...prev, colorMode: 'all' }));
+        setPendingFilters((prev) => ({ ...prev, colorMode: 'all' }));
         break;
       case 'resolution':
         setFilters((prev) => ({ ...prev, minResolution: 0 }));
+        setPendingFilters((prev) => ({ ...prev, minResolution: 0 }));
         break;
       case 'categories':
         setFilters((prev) => ({ ...prev, categories: new Set() }));
+        setPendingFilters((prev) => ({ ...prev, categories: new Set() }));
         break;
       case 'tags':
         setFilters((prev) => ({ ...prev, tags: new Set() }));
+        setPendingFilters((prev) => ({ ...prev, tags: new Set() }));
         break;
       case 'date':
         setFilters((prev) => ({ ...prev, dateFrom: null, dateTo: null }));
+        setPendingFilters((prev) => ({ ...prev, dateFrom: null, dateTo: null }));
         break;
       case 'aspect':
         setFilters((prev) => ({ ...prev, aspectRatio: 'all' }));
+        setPendingFilters((prev) => ({ ...prev, aspectRatio: 'all' }));
         break;
       default:
         break;
     }
   };
+
+  const applyPendingFilters = () => {
+    setFilters({
+      ...pendingFilters,
+      categories: new Set(pendingFilters.categories),
+      tags: new Set(pendingFilters.tags)
+    });
+    setFilterPanelOpen(false);
+  };
+
+  useEffect(() => {
+    if (filterPanelOpen) {
+      setPendingFilters({ ...filters, categories: new Set(filters.categories), tags: new Set(filters.tags) });
+    }
+  }, [filterPanelOpen, filters]);
+
+  useEffect(
+    () => () => {
+      if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+    },
+    []
+  );
 
   useEffect(() => {
     const updateGrid = () => {
@@ -209,7 +242,7 @@ function App() {
       <Header
         filterPanelOpen={filterPanelOpen}
         onToggleFilterPanel={toggleFilterPanel}
-        stats={{ total: images.length, filtered: filteredImages.length, selected: selectedIds.size }}
+        stats={{ total: images.length, filtered: filteredImages.length }}
         onSearch={(value) => setFilters((prev) => ({ ...prev, search: value }))}
         searchValue={filters.search}
       />
@@ -223,9 +256,6 @@ function App() {
             sortBy={sortBy}
             view={view}
             onViewChange={setView}
-            onSelectAll={selectAll}
-            onClearSelection={clearSelection}
-            selectedCount={selectedIds.size}
           />
 
           <ActiveFiltersBar activeFilters={activeFilters} onClear={resetFilters} onRemove={removeFilter} />
@@ -233,8 +263,6 @@ function App() {
           <ImageGrid
             images={filteredImages}
             gridSize={gridSize}
-            selectedIds={selectedIds}
-            onToggleSelect={toggleSelection}
             onOpenDetail={openDetailPanel}
             view={view}
           />
@@ -245,8 +273,10 @@ function App() {
         <FilterPanel
           isOpen={filterPanelOpen}
           onClose={toggleFilterPanel}
-          filters={filters}
-          onFiltersChange={setFilters}
+          filters={pendingFilters}
+          onFiltersChange={setPendingFilters}
+          onApply={applyPendingFilters}
+          onReset={resetFilters}
           categories={categories}
           tags={allTags}
         />
@@ -261,7 +291,7 @@ function App() {
       </main>
 
       <div
-        className={`fixed inset-0 bg-black/40 backdrop-blur-sm transition-opacity ${
+        className={`fixed inset-0 bg-black/35 transition-opacity ${
           overlayVisible ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
         }`}
         onClick={() => {
