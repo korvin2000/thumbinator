@@ -1,13 +1,30 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { getResolutionClass } from '../data/utils.js';
 
 function DetailPanel({ isOpen, image, onClose, formatDate, formatDateTime }) {
+  const [shouldShowOpenState, setShouldShowOpenState] = useState(false);
+
+  useEffect(() => {
+    if (!image) {
+      setShouldShowOpenState(false);
+      return undefined;
+    }
+
+    if (!isOpen) {
+      setShouldShowOpenState(false);
+      return undefined;
+    }
+
+    const frame = requestAnimationFrame(() => setShouldShowOpenState(true));
+    return () => cancelAnimationFrame(frame);
+  }, [image, isOpen]);
+
   if (!image) return null;
 
   return (
     <aside
       className={`detail-panel fixed left-0 top-0 h-full w-96 bg-slate-900/90 border-r border-slate-700/60 shadow-2xl z-40 overflow-y-auto ${
-        isOpen ? 'open' : ''
+        shouldShowOpenState ? 'open' : ''
       }`}
       aria-hidden={!isOpen}
     >
