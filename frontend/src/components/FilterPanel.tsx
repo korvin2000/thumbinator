@@ -1,10 +1,23 @@
 import React, { useEffect } from 'react';
-import { resolutionLabels } from '../data/utils.js';
+import { resolutionLabels } from '../data/utils';
+import type { FilterState } from '../types/gallery';
 
-function FilterPanel({ isOpen, onClose, filters, onFiltersChange, onApply, onReset, categories, tags }) {
-  const updateFilter = (key, value) => onFiltersChange((prev) => ({ ...prev, [key]: value }));
+interface FilterPanelProps {
+  isOpen: boolean;
+  onClose: () => void;
+  filters: FilterState;
+  onFiltersChange: React.Dispatch<React.SetStateAction<FilterState>>;
+  onApply: () => void;
+  onReset: () => void;
+  categories: string[];
+  tags: string[];
+}
 
-  const toggleCategory = (category) => {
+const FilterPanel: React.FC<FilterPanelProps> = ({ isOpen, onClose, filters, onFiltersChange, onApply, onReset, categories, tags }) => {
+  const updateFilter = <K extends keyof FilterState>(key: K, value: FilterState[K]) =>
+    onFiltersChange((prev) => ({ ...prev, [key]: value }));
+
+  const toggleCategory = (category: string) => {
     onFiltersChange((prev) => {
       const next = new Set(prev.categories);
       next.has(category) ? next.delete(category) : next.add(category);
@@ -12,7 +25,7 @@ function FilterPanel({ isOpen, onClose, filters, onFiltersChange, onApply, onRes
     });
   };
 
-  const toggleTag = (tag) => {
+  const toggleTag = (tag: string) => {
     onFiltersChange((prev) => {
       const next = new Set(prev.tags);
       next.has(tag) ? next.delete(tag) : next.add(tag);
@@ -23,7 +36,7 @@ function FilterPanel({ isOpen, onClose, filters, onFiltersChange, onApply, onRes
   useEffect(() => {
     if (!isOpen) return undefined;
 
-    const handleKeyDown = (event) => {
+    const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Enter') {
         event.preventDefault();
         onApply();
@@ -68,7 +81,7 @@ function FilterPanel({ isOpen, onClose, filters, onFiltersChange, onApply, onRes
               <button
                 key={mode}
                 data-color={mode}
-                onClick={() => updateFilter('colorMode', mode)}
+                onClick={() => updateFilter('colorMode', mode as FilterState['colorMode'])}
                 className={`color-filter-btn flex-1 px-4 py-2.5 rounded-xl transition-all ${
                   filters.colorMode === mode ? 'bg-indigo-600 border border-indigo-500 text-white' : 'bg-slate-800 border border-slate-700 text-slate-300'
                 }`}
@@ -190,7 +203,7 @@ function FilterPanel({ isOpen, onClose, filters, onFiltersChange, onApply, onRes
           </label>
           <select
             value={filters.aspectRatio}
-            onChange={(e) => updateFilter('aspectRatio', e.target.value)}
+            onChange={(e) => updateFilter('aspectRatio', e.target.value as FilterState['aspectRatio'])}
             className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-sm text-slate-200"
           >
             <option value="all">Any</option>
@@ -220,6 +233,6 @@ function FilterPanel({ isOpen, onClose, filters, onFiltersChange, onApply, onRes
       </div>
     </aside>
   );
-}
+};
 
 export default FilterPanel;

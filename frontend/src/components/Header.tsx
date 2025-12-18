@@ -1,7 +1,19 @@
-import React from 'react';
-import { debounce } from '../data/utils.js';
+import React, { useEffect, useMemo, useState } from 'react';
+import { debounce } from '../data/utils';
+import type { GalleryStats } from '../types/gallery';
 
-function Header({
+interface HeaderProps {
+  filterPanelOpen: boolean;
+  onToggleFilterPanel: () => void;
+  stats: GalleryStats;
+  onSearch: (value: string) => void;
+  searchValue: string;
+  hasActiveFilters: boolean;
+  activeFilterCount: number;
+  onClearFilters: () => void;
+}
+
+const Header: React.FC<HeaderProps> = ({
   filterPanelOpen,
   onToggleFilterPanel,
   stats,
@@ -10,8 +22,13 @@ function Header({
   hasActiveFilters,
   activeFilterCount,
   onClearFilters
-}) {
-  const handleSearch = debounce((value) => onSearch(value), 300);
+}) => {
+  const [query, setQuery] = useState(searchValue);
+  const handleSearch = useMemo(() => debounce(onSearch, 300), [onSearch]);
+
+  useEffect(() => {
+    setQuery(searchValue);
+  }, [searchValue]);
 
   return (
     <header className="flex items-center justify-between px-6 py-4 bg-slate-950/80 border-b border-slate-800 sticky top-0 z-30">
@@ -31,8 +48,11 @@ function Header({
             <i className="fas fa-search" />
           </span>
           <input
-            defaultValue={searchValue}
-            onChange={(e) => handleSearch(e.target.value)}
+            value={query}
+            onChange={(e) => {
+              setQuery(e.target.value);
+              handleSearch(e.target.value);
+            }}
             placeholder="Search images, tags, locations..."
             className="w-full pl-10 pr-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
           />
@@ -78,20 +98,25 @@ function Header({
       </div>
     </header>
   );
+};
+
+interface StatCardProps {
+  label: string;
+  value: number;
+  icon: string;
+  accent: string;
 }
 
-function StatCard({ label, value, icon, accent }) {
-  return (
-    <div className="px-4 py-3 bg-slate-900/70 rounded-xl border border-slate-800 flex items-center gap-3">
-      <div className={`w-10 h-10 rounded-lg bg-slate-800 flex items-center justify-center ${accent}`}>
-        <i className={`fas ${icon}`} />
-      </div>
-      <div>
-        <p className="text-xs text-slate-500">{label}</p>
-        <p className="text-lg font-semibold text-white stat-number">{value}</p>
-      </div>
+const StatCard: React.FC<StatCardProps> = ({ label, value, icon, accent }) => (
+  <div className="px-4 py-3 bg-slate-900/70 rounded-xl border border-slate-800 flex items-center gap-3">
+    <div className={`w-10 h-10 rounded-lg bg-slate-800 flex items-center justify-center ${accent}`}>
+      <i className={`fas ${icon}`} />
     </div>
-  );
-}
+    <div>
+      <p className="text-xs text-slate-500">{label}</p>
+      <p className="text-lg font-semibold text-white stat-number">{value}</p>
+    </div>
+  </div>
+);
 
 export default Header;

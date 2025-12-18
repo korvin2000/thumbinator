@@ -1,99 +1,96 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import ActiveFiltersBar from './components/ActiveFiltersBar.jsx';
-import DetailPanel from './components/DetailPanel.jsx';
-import FilterPanel from './components/FilterPanel.jsx';
-import FooterBar from './components/FooterBar.jsx';
-import Header from './components/Header.jsx';
-import ImageGrid from './components/ImageGrid.jsx';
-import Toolbar from './components/Toolbar.jsx';
-import { fetchFilterOptions, openImageStream } from './api/imageApi.js';
-import { activeResolutionLabels, formatDate, formatDateTime } from './data/utils.js';
-
-const baseFilters = {
-  search: '',
-  colorMode: 'all',
-  minResolution: 0,
-  minSize: null,
-  maxSize: null,
-  dateFrom: null,
-  dateTo: null,
-  aspectRatio: 'all'
-};
-
-const createFilterState = () => ({
-  ...baseFilters,
-  categories: new Set(),
-  tags: new Set()
-});
+import ActiveFiltersBar from './components/ActiveFiltersBar';
+import DetailPanel from './components/DetailPanel';
+import FilterPanel from './components/FilterPanel';
+import FooterBar from './components/FooterBar';
+import Header from './components/Header';
+import ImageGrid from './components/ImageGrid';
+import Toolbar from './components/Toolbar';
+import { ImageApiClient } from './api/imageApi';
+import { FilterStateFactory } from './data/filterState';
+import { activeResolutionLabels, formatDateTime } from './data/utils';
+import type {
+  ActiveFilter,
+  ActiveFilterType,
+  FilterOptions,
+  FilterState,
+  GalleryStats,
+  ImageMetadata,
+  SortOption
+} from './types/gallery';
 
 function App() {
-  const [images, setImages] = useState([]);
-  const [filters, setFilters] = useState(createFilterState);
-  const [pendingFilters, setPendingFilters] = useState(createFilterState);
-  const [sortBy, setSortBy] = useState('newest');
-  const [gridSize, setGridSize] = useState(4);
-  const [view, setView] = useState('grid');
-  const [filterPanelOpen, setFilterPanelOpen] = useState(false);
-  const [detailPanelOpen, setDetailPanelOpen] = useState(false);
-  const [selectedImage, setSelectedImage] = useState(null);
-  const [stats, setStats] = useState({ total: 0, filtered: 0 });
-  const [catalog, setCatalog] = useState({ categories: [], tags: [] });
-  const [loading, setLoading] = useState(true);
-  const [streamError, setStreamError] = useState(null);
-  const streamCleanupRef = useRef(null);
-  const closeTimerRef = useRef(null);
+  const [images, setImages] = useState<ImageMetadata[]>([]);
+  const [filters, setFilters] = useState<FilterState>(FilterStateFactory.create);
+  const [pendingFilters, setPendingFilters] = useState<FilterState>(FilterStateFactory.create);
+  const [sortBy, setSortBy] = useState<SortOption>('newest');
+  const [gridSize, setGridSize] = useState<number>(4);
+  const [view, setView] = useState<'grid' | 'list'>('grid');
+  const [filterPanelOpen, setFilterPanelOpen] = useState<boolean>(false);
+  const [detailPanelOpen, setDetailPanelOpen] = useState<boolean>(false);
+  const [selectedImage, setSelectedImage] = useState<ImageMetadata | null>(null);
+  const [stats, setStats] = useState<GalleryStats>({ total: 0, filtered: 0 });
+  const [catalog, setCatalog] = useState<FilterOptions>({ categories: [], tags: [] });
+  const [loading, setLoading] = useState<boolean>(true);
+  const [streamError, setStreamError] = useState<string | null>(null);
+  const streamCleanupRef = useRef<(() => void) | null>(null);
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const activeFilters = useMemo(() => {
-    const entries = [];
+  const activeFilters = useMemo<ActiveFilter[]>(() => {
+    const entries: ActiveFilter[] = [];
     if (filters.search) entries.push({ type: 'search', label: `Search: "${filters.search}"` });
     if (filters.colorMode !== 'all') entries.push({ type: 'color', label: filters.colorMode === 'color' ? 'Color Only' : 'B&W Only' });
     if (filters.minResolution > 0) entries.push({ type: 'resolution', label: `Min: ${activeResolutionLabels[filters.minResolution]}` });
-    if (filters.categories.size > 0) entries.push({ type: 'categories', label: `Categories: ${[...filters.categories].join(', ')}` });
-    if (filters.tags.size > 0) entries.push({ type: 'tags', label: `Tags: ${[...filters.tags].join(', ')}` });
+    if (filters.categories.size > 0) entries.push({ type: 'categories', label: `Categories: ${Array.from(filters.categories).join(', ')}` });
+    if (filters.tags.size > 0) entries.push({ type: 'tags', label: `Tags: ${Array.from(filters.tags).join(', ')}` });
     if (filters.dateFrom || filters.dateTo) entries.push({ type: 'date', label: 'Date range active' });
     if (filters.aspectRatio !== 'all') entries.push({ type: 'aspect', label: `Ratio: ${filters.aspectRatio}` });
     return entries;
   }, [filters]);
 
-  const toggleFilterPanel = () => setFilterPanelOpen((prev) => !prev);
-  const closeDetailPanel = () => {
+  const toggleFilterPanel = useCallback(() => setFilterPanelOpen((previous) => !previous), []);
+
+  const closeDetailPanel = useCallback(() => {
     setDetailPanelOpen(false);
     if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
     closeTimerRef.current = setTimeout(() => {
       setSelectedImage(null);
       closeTimerRef.current = null;
     }, 300);
-  };
+  }, []);
 
-  const openDetailPanel = (image) => {
-    if (closeTimerRef.current) {
-      clearTimeout(closeTimerRef.current);
-      closeTimerRef.current = null;
-    }
+  const openDetailPanel = useCallback(
+    (image: ImageMetadata) => {
+      if (closeTimerRef.current) {
+        clearTimeout(closeTimerRef.current);
+        closeTimerRef.current = null;
+      }
 
-    const isSameImage = selectedImage?.id === image.id;
+      const isSameImage = selectedImage?.id === image.id;
 
-    if (isSameImage) {
-      if (detailPanelOpen) {
-        closeDetailPanel();
+      if (isSameImage) {
+        if (detailPanelOpen) {
+          closeDetailPanel();
+          return;
+        }
+
+        setDetailPanelOpen(true);
         return;
       }
 
+      setSelectedImage(image);
       setDetailPanelOpen(true);
-      return;
-    }
+    },
+    [closeDetailPanel, detailPanelOpen, selectedImage]
+  );
 
-    setSelectedImage(image);
-    setDetailPanelOpen(true);
-  };
-
-  const resetFilters = () => {
-    const cleared = createFilterState();
+  const resetFilters = useCallback(() => {
+    const cleared = FilterStateFactory.create();
     setFilters(cleared);
     setPendingFilters(cleared);
-  };
+  }, []);
 
-  const removeFilter = (type) => {
+  const removeFilter = useCallback((type: ActiveFilterType) => {
     switch (type) {
       case 'search':
         setFilters((prev) => ({ ...prev, search: '' }));
@@ -108,12 +105,12 @@ function App() {
         setPendingFilters((prev) => ({ ...prev, minResolution: 0 }));
         break;
       case 'categories':
-        setFilters((prev) => ({ ...prev, categories: new Set() }));
-        setPendingFilters((prev) => ({ ...prev, categories: new Set() }));
+        setFilters((prev) => ({ ...prev, categories: new Set<string>() }));
+        setPendingFilters((prev) => ({ ...prev, categories: new Set<string>() }));
         break;
       case 'tags':
-        setFilters((prev) => ({ ...prev, tags: new Set() }));
-        setPendingFilters((prev) => ({ ...prev, tags: new Set() }));
+        setFilters((prev) => ({ ...prev, tags: new Set<string>() }));
+        setPendingFilters((prev) => ({ ...prev, tags: new Set<string>() }));
         break;
       case 'date':
         setFilters((prev) => ({ ...prev, dateFrom: null, dateTo: null }));
@@ -126,16 +123,12 @@ function App() {
       default:
         break;
     }
-  };
+  }, []);
 
-  const applyPendingFilters = () => {
-    setFilters({
-      ...pendingFilters,
-      categories: new Set(pendingFilters.categories),
-      tags: new Set(pendingFilters.tags)
-    });
+  const applyPendingFilters = useCallback(() => {
+    setFilters(FilterStateFactory.clone(pendingFilters));
     setFilterPanelOpen(false);
-  };
+  }, [pendingFilters]);
 
   const startStream = useCallback(() => {
     if (streamCleanupRef.current) streamCleanupRef.current();
@@ -145,7 +138,7 @@ function App() {
     setLoading(true);
     setStats((prev) => ({ ...prev, filtered: 0 }));
 
-    streamCleanupRef.current = openImageStream(filters, sortBy, {
+    streamCleanupRef.current = ImageApiClient.openImageStream(filters, sortBy, {
       onImage: (image) => {
         setImages((prev) => {
           const next = [...prev, image];
@@ -168,15 +161,15 @@ function App() {
 
   useEffect(() => {
     if (filterPanelOpen) {
-      setPendingFilters({ ...filters, categories: new Set(filters.categories), tags: new Set(filters.tags) });
+      setPendingFilters(FilterStateFactory.clone(filters));
     }
   }, [filterPanelOpen, filters]);
 
   useEffect(() => {
-    fetchFilterOptions()
+    ImageApiClient.fetchFilterOptions()
       .then((options) => {
-        setCatalog({ categories: Array.from(options.categories || []), tags: Array.from(options.tags || []) });
-        setStats((prev) => ({ ...prev, total: options.totalImages || 0 }));
+        setCatalog({ categories: options.categories ?? [], tags: options.tags ?? [] });
+        setStats((prev) => ({ ...prev, total: options.totalImages ?? 0 }));
       })
       .catch(() => setStreamError('Unable to load filter options'));
   }, []);
@@ -188,12 +181,9 @@ function App() {
     };
   }, [startStream]);
 
-  useEffect(
-    () => () => {
-      if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
-    },
-    []
-  );
+  useEffect(() => () => {
+    if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+  }, []);
 
   useEffect(() => {
     const updateGrid = () => {
@@ -271,15 +261,12 @@ function App() {
           isOpen={detailPanelOpen}
           image={selectedImage}
           onClose={closeDetailPanel}
-          formatDate={formatDate}
           formatDateTime={formatDateTime}
         />
       </main>
 
       <div
-        className={`fixed inset-0 bg-black/35 transition-opacity ${
-          overlayVisible ? 'opacity-100' : 'opacity-0'
-        } ${overlayInteractive ? 'pointer-events-auto' : 'pointer-events-none'}`}
+        className={`fixed inset-0 bg-black/35 transition-opacity ${overlayVisible ? 'opacity-100' : 'opacity-0'} ${overlayInteractive ? 'pointer-events-auto' : 'pointer-events-none'}`}
         onClick={() => {
           if (filterPanelOpen) setFilterPanelOpen(false);
         }}
