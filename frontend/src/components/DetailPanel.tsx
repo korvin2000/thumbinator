@@ -1,7 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { getResolutionClass } from '../data/utils.js';
+import { getResolutionClass } from '../data/utils';
+import type { ImageMetadata } from '../types/gallery';
 
-function DetailPanel({ isOpen, image, onClose, formatDate, formatDateTime }) {
+interface DetailPanelProps {
+  isOpen: boolean;
+  image: ImageMetadata | null;
+  onClose: () => void;
+  formatDateTime: (date: Date) => string;
+}
+
+const DetailPanel: React.FC<DetailPanelProps> = ({ isOpen, image, onClose, formatDateTime }) => {
   const [shouldShowOpenState, setShouldShowOpenState] = useState(false);
 
   useEffect(() => {
@@ -23,9 +31,7 @@ function DetailPanel({ isOpen, image, onClose, formatDate, formatDateTime }) {
 
   return (
     <aside
-      className={`detail-panel fixed left-0 top-0 h-full w-96 bg-slate-900/90 border-r border-slate-700/60 shadow-2xl z-40 overflow-y-auto ${
-        shouldShowOpenState ? 'open' : ''
-      }`}
+      className={`detail-panel fixed left-0 top-0 h-full w-96 bg-slate-900/90 border-r border-slate-700/60 shadow-2xl z-40 overflow-y-auto ${shouldShowOpenState ? 'open' : ''}`}
       aria-hidden={!isOpen}
     >
       <div className="p-6 space-y-6">
@@ -98,27 +104,38 @@ function DetailPanel({ isOpen, image, onClose, formatDate, formatDateTime }) {
             <i className="fas fa-trash" />
           </button>
         </div>
+
+        <div className="flex items-center gap-2 mt-2">
+          <span className="px-2 py-0.5 bg-indigo-500/30 rounded text-xs text-indigo-300">{image.category}</span>
+          <span className="text-xs text-slate-400"><i className="fas fa-map-marker-alt mr-1" />{image.location}</span>
+        </div>
       </div>
     </aside>
   );
+};
+
+interface MetaItemProps {
+  label: string;
+  value: React.ReactNode;
 }
 
-function MetaItem({ label, value }) {
-  return (
-    <div className="meta-item">
-      <p className="text-xs text-slate-500 mb-1">{label}</p>
-      <p className="text-sm text-white">{value}</p>
-    </div>
-  );
+const MetaItem: React.FC<MetaItemProps> = ({ label, value }) => (
+  <div className="meta-item">
+    <p className="text-xs text-slate-500 mb-1">{label}</p>
+    <p className="text-sm text-white">{value}</p>
+  </div>
+);
+
+interface InfoProps {
+  label: string;
+  value: React.ReactNode;
 }
 
-function Info({ label, value }) {
-  return (
-    <div>
-      <p className="text-xs text-slate-500">{label}</p>
-      <p className="text-slate-200">{value}</p>
-    </div>
-  );
-}
+const Info: React.FC<InfoProps> = ({ label, value }) => (
+  <div>
+    <p className="text-xs text-slate-500">{label}</p>
+    <p className="text-slate-200">{value}</p>
+  </div>
+);
 
 export default DetailPanel;

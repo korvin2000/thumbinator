@@ -1,7 +1,17 @@
 import React from 'react';
-import ImageCard from './ImageCard.jsx';
+import ImageCard from './ImageCard';
+import type { ImageMetadata } from '../types/gallery';
 
-function ImageGrid({ images, gridSize, onOpenDetail, view, loading, error }) {
+interface ImageGridProps {
+  images: ImageMetadata[];
+  gridSize: number;
+  onOpenDetail: (image: ImageMetadata) => void;
+  view: 'grid' | 'list';
+  loading: boolean;
+  error: string | null;
+}
+
+const ImageGrid: React.FC<ImageGridProps> = ({ images, gridSize, onOpenDetail, view, loading, error }) => {
   if (loading) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center text-center py-20">
@@ -47,6 +57,6 @@ function ImageGrid({ images, gridSize, onOpenDetail, view, loading, error }) {
       </div>
     </div>
   );
-}
+};
 
 export default ImageGrid;
