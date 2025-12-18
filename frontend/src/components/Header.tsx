@@ -54,18 +54,18 @@ const Header: React.FC<HeaderProps> = ({
               handleSearch(e.target.value);
             }}
             placeholder="Search images, tags, locations..."
-            className="w-full pl-10 pr-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+            className="input-text pl-10 pr-4 text-sm"
           />
         </div>
         <div className="flex items-center gap-2">
           <button
             onClick={onToggleFilterPanel}
-            className={`px-4 py-3 rounded-xl text-sm font-medium transition-colors border flex items-center gap-2 ${
+            className={`action-button ${
               filterPanelOpen
-                ? 'bg-indigo-600 text-white border-indigo-500'
+                ? 'action-button--primary'
                 : hasActiveFilters
-                  ? 'bg-slate-900 text-indigo-200 border-indigo-500 shadow-[0_0_0_1px_rgba(99,102,241,0.35)]'
-                  : 'bg-slate-900 text-slate-200 border-slate-700 hover:border-indigo-500'
+                  ? 'action-button--ghost'
+                  : 'action-button--subtle'
             }`}
             aria-pressed={filterPanelOpen}
           >
@@ -79,9 +79,7 @@ const Header: React.FC<HeaderProps> = ({
           </button>
           <button
             onClick={onClearFilters}
-            className={`px-3 py-3 rounded-xl text-sm font-medium transition-colors border bg-slate-900 text-slate-200 border-slate-700 ${
-              hasActiveFilters ? 'hover:border-rose-500 hover:text-rose-200' : 'opacity-50 cursor-not-allowed'
-            }`}
+            className={`action-button action-button--ghost px-3 ${!hasActiveFilters ? 'action-button--disabled' : ''}`}
             disabled={!hasActiveFilters}
           >
             <span className="flex items-center gap-2">
@@ -108,8 +106,8 @@ interface StatCardProps {
 }
 
 const StatCard: React.FC<StatCardProps> = ({ label, value, icon, accent }) => (
-  <div className="px-4 py-3 bg-slate-900/70 rounded-xl border border-slate-800 flex items-center gap-3">
-    <div className={`w-10 h-10 rounded-lg bg-slate-800 flex items-center justify-center ${accent}`}>
+  <div className="stat-card">
+    <div className={`stat-icon ${accent}`}>
       <i className={`fas ${icon}`} />
     </div>
     <div>
