@@ -11,7 +11,7 @@ interface ToolbarProps {
 }
 
 const Toolbar: React.FC<ToolbarProps> = ({ gridSize, onGridSizeChange, onSortChange, sortBy, view, onViewChange }) => (
-  <div className="px-6 py-4 bg-slate-900/80 border-b border-slate-800 flex items-center gap-4">
+  <div className="px-6 py-2 bg-slate-900/80 border-b border-slate-800 flex items-center gap-4">
     <div className="flex items-center gap-2 bg-slate-800/70 border border-slate-700 rounded-lg p-1">
       <button
         className={`px-4 py-2 rounded-md text-sm transition-colors ${view === 'grid' ? 'bg-indigo-600 text-white' : 'text-slate-400'}`}
@@ -30,7 +30,7 @@ const Toolbar: React.FC<ToolbarProps> = ({ gridSize, onGridSizeChange, onSortCha
     <div className="flex items-center gap-3">
       <label className="text-sm text-slate-400">Grid</label>
       <input type="range" min="2" max="6" value={gridSize} onChange={(e) => onGridSizeChange(Number(e.target.value))} className="w-32" />
-      <span className="text-sm text-slate-300">{gridSize} cols</span>
+      <span className="text-sm text-slate-300">{gridSize}</span>
     </div>
 
     <div className="flex items-center gap-3">

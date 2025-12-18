@@ -31,14 +31,14 @@ const Header: React.FC<HeaderProps> = ({
   }, [searchValue]);
 
   return (
-    <header className="flex items-center justify-between px-6 py-4 bg-slate-950/80 border-b border-slate-800 sticky top-0 z-30">
+    <header className="flex items-center justify-between px-6 py-2 bg-slate-950/80 border-b border-slate-800 sticky top-0 z-30">
       <div className="flex items-center gap-4">
         <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-600 to-purple-500 flex items-center justify-center shadow-lg shadow-indigo-900/50">
           <i className="fas fa-images text-white text-xl" />
         </div>
         <div>
           <p className="text-sm text-slate-400">ImageVault Pro</p>
-          <h1 className="text-2xl font-semibold text-white">Digital Gallery Manager</h1>
+          <h1 className="text-xl font-semibold text-white">Digital Gallery Manager</h1>
         </div>
       </div>
 
@@ -54,7 +54,7 @@ const Header: React.FC<HeaderProps> = ({
               handleSearch(e.target.value);
             }}
             placeholder="Search images, tags, locations..."
-            className="input-text pl-10 pr-4 text-sm"
+            className="w-full pl-11 pr-4 py-2.5 rounded-xl bg-slate-800/80 border border-slate-700"
           />
         </div>
         <div className="flex items-center gap-2">

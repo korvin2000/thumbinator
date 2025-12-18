@@ -88,8 +88,8 @@
 }
 
 .stat-card {
-  padding: 0.85rem 1rem;
-  border-radius: 14px;
+  padding: 0.4rem 0.75rem;
+  border-radius: 10px;
   border: 1px solid var(--border);
   background: var(--surface);
   display: flex;
