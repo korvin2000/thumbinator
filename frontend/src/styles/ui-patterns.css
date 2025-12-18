@@ -1,0 +1,123 @@
+:root {
+  --surface: rgba(15, 23, 42, 0.92);
+  --surface-strong: rgba(30, 41, 59, 0.9);
+  --border-strong: #1f2937;
+}
+
+.app-surface {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  box-shadow: 0 10px 30px -18px rgba(0, 0, 0, 0.65);
+}
+
+.section-heading {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.input-text {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: var(--surface-strong);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  color: var(--text-primary);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.input-text::placeholder {
+  color: var(--text-secondary);
+}
+
+.input-text:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.35);
+  background: #0f172a;
+}
+
+.action-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border-radius: 14px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border: 1px solid var(--border);
+  background: var(--surface-strong);
+  color: var(--text-primary);
+  transition: all 0.2s ease;
+}
+
+.action-button--primary {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  border-color: var(--primary);
+  color: white;
+  box-shadow: 0 12px 20px -12px rgba(99, 102, 241, 0.55);
+}
+
+.action-button--ghost {
+  background: #0b1220;
+  color: var(--text-primary);
+}
+
+.action-button--ghost:hover {
+  border-color: var(--primary);
+  color: #e0e7ff;
+}
+
+.action-button--subtle {
+  border-color: var(--border-strong);
+  color: var(--text-secondary);
+}
+
+.action-button--subtle:hover {
+  color: var(--text-primary);
+  background: rgba(148, 163, 184, 0.08);
+}
+
+.action-button--disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.stat-card {
+  padding: 0.85rem 1rem;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.stat-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  background: rgba(99, 102, 241, 0.12);
+}
+
+.overlay-mask {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  transition: opacity 0.25s ease;
+}
+
+.overlay-mask.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.overlay-mask.visible {
+  opacity: 1;
+}

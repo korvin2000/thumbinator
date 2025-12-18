@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import ActiveFiltersBar from './components/ActiveFiltersBar';
 import DetailPanel from './components/DetailPanel';
 import FilterPanel from './components/FilterPanel';
@@ -6,11 +6,11 @@ import FooterBar from './components/FooterBar';
 import Header from './components/Header';
 import ImageGrid from './components/ImageGrid';
 import Toolbar from './components/Toolbar';
+import OverlayMask from './components/OverlayMask';
 import { ImageApiClient } from './api/imageApi';
 import { FilterStateFactory } from './data/filterState';
-import { activeResolutionLabels, formatDateTime } from './data/utils';
+import { formatDateTime } from './data/utils';
 import type {
-  ActiveFilter,
   ActiveFilterType,
   FilterOptions,
   FilterState,
@@ -18,13 +18,15 @@ import type {
   ImageMetadata,
   SortOption
 } from './types/gallery';
+import { useActiveFilters } from './hooks/useActiveFilters';
+import { useResponsiveGrid } from './hooks/useResponsiveGrid';
 
 function App() {
   const [images, setImages] = useState<ImageMetadata[]>([]);
   const [filters, setFilters] = useState<FilterState>(FilterStateFactory.create);
   const [pendingFilters, setPendingFilters] = useState<FilterState>(FilterStateFactory.create);
   const [sortBy, setSortBy] = useState<SortOption>('newest');
-  const [gridSize, setGridSize] = useState<number>(4);
+  const { gridSize, setGridSize } = useResponsiveGrid(4);
   const [view, setView] = useState<'grid' | 'list'>('grid');
   const [filterPanelOpen, setFilterPanelOpen] = useState<boolean>(false);
   const [detailPanelOpen, setDetailPanelOpen] = useState<boolean>(false);
@@ -36,17 +38,7 @@ function App() {
   const streamCleanupRef = useRef<(() => void) | null>(null);
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const activeFilters = useMemo<ActiveFilter[]>(() => {
-    const entries: ActiveFilter[] = [];
-    if (filters.search) entries.push({ type: 'search', label: `Search: "${filters.search}"` });
-    if (filters.colorMode !== 'all') entries.push({ type: 'color', label: filters.colorMode === 'color' ? 'Color Only' : 'B&W Only' });
-    if (filters.minResolution > 0) entries.push({ type: 'resolution', label: `Min: ${activeResolutionLabels[filters.minResolution]}` });
-    if (filters.categories.size > 0) entries.push({ type: 'categories', label: `Categories: ${Array.from(filters.categories).join(', ')}` });
-    if (filters.tags.size > 0) entries.push({ type: 'tags', label: `Tags: ${Array.from(filters.tags).join(', ')}` });
-    if (filters.dateFrom || filters.dateTo) entries.push({ type: 'date', label: 'Date range active' });
-    if (filters.aspectRatio !== 'all') entries.push({ type: 'aspect', label: `Ratio: ${filters.aspectRatio}` });
-    return entries;
-  }, [filters]);
+  const { activeFilters, activeFilterCount, hasActiveFilters } = useActiveFilters(filters);
 
   const toggleFilterPanel = useCallback(() => setFilterPanelOpen((previous) => !previous), []);
 
@@ -185,29 +177,6 @@ function App() {
     if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
   }, []);
 
-  useEffect(() => {
-    const updateGrid = () => {
-      const width = window.innerWidth;
-      if (width < 640) {
-        setGridSize(2);
-      } else if (width < 1024) {
-        setGridSize(3);
-      } else {
-        setGridSize(4);
-      }
-    };
-
-    updateGrid();
-    const handler = () => updateGrid();
-    window.addEventListener('resize', handler);
-    return () => window.removeEventListener('resize', handler);
-  }, []);
-
-  const overlayVisible = filterPanelOpen || detailPanelOpen;
-  const overlayInteractive = filterPanelOpen;
-  const activeFilterCount = activeFilters.length;
-  const hasActiveFilters = activeFilterCount > 0;
-
   return (
     <div className="min-h-screen text-slate-200">
       <Header
@@ -265,8 +234,9 @@ function App() {
         />
       </main>
 
-      <div
-        className={`fixed inset-0 bg-black/35 transition-opacity ${overlayVisible ? 'opacity-100' : 'opacity-0'} ${overlayInteractive ? 'pointer-events-auto' : 'pointer-events-none'}`}
+      <OverlayMask
+        isVisible={filterPanelOpen || detailPanelOpen}
+        isInteractive={filterPanelOpen}
         onClick={() => {
           if (filterPanelOpen) setFilterPanelOpen(false);
         }}

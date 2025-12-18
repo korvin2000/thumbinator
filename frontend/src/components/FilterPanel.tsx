@@ -60,21 +60,21 @@ const FilterPanel: React.FC<FilterPanelProps> = ({ isOpen, onClose, filters, onF
         </div>
 
         <div className="mb-6">
-          <label className="block text-sm font-medium text-slate-300 mb-2">
-            <i className="fas fa-search mr-2 text-slate-400" />Search Text
+          <label className="section-heading text-sm mb-2">
+            <i className="fas fa-search text-slate-400" />Search Text
           </label>
           <input
             type="text"
             value={filters.search}
             onChange={(e) => updateFilter('search', e.target.value)}
             placeholder="Search by name, description..."
-            className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-xl text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all"
+            className="input-text"
           />
         </div>
 
         <div className="mb-6">
-          <label className="block text-sm font-medium text-slate-300 mb-3">
-            <i className="fas fa-palette mr-2 text-slate-400" />Color Mode
+          <label className="section-heading text-sm mb-3">
+            <i className="fas fa-palette text-slate-400" />Color Mode
           </label>
           <div className="flex gap-2">
             {['all', 'color', 'bw'].map((mode) => (
@@ -95,8 +95,8 @@ const FilterPanel: React.FC<FilterPanelProps> = ({ isOpen, onClose, filters, onF
         </div>
 
         <div className="mb-6">
-          <label className="block text-sm font-medium text-slate-300 mb-3">
-            <i className="fas fa-expand mr-2 text-slate-400" />Minimum Resolution
+          <label className="section-heading text-sm mb-3">
+            <i className="fas fa-expand text-slate-400" />Minimum Resolution
           </label>
           <div className="space-y-2">
             <input
@@ -119,8 +119,8 @@ const FilterPanel: React.FC<FilterPanelProps> = ({ isOpen, onClose, filters, onF
         </div>
 
         <div className="mb-6">
-          <label className="block text-sm font-medium text-slate-300 mb-3">
-            <i className="fas fa-weight-hanging mr-2 text-slate-400" />File Size Range
+          <label className="section-heading text-sm mb-3">
+            <i className="fas fa-weight-hanging text-slate-400" />File Size Range
           </label>
           <div className="flex items-center gap-3">
             <input
@@ -128,7 +128,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({ isOpen, onClose, filters, onF
               value={filters.minSize ?? ''}
               onChange={(e) => updateFilter('minSize', e.target.value ? parseFloat(e.target.value) : null)}
               placeholder="Min MB"
-              className="flex-1 px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-200 text-sm"
+              className="input-text flex-1 py-2 text-sm"
             />
             <span className="text-slate-500">to</span>
             <input
@@ -136,14 +136,14 @@ const FilterPanel: React.FC<FilterPanelProps> = ({ isOpen, onClose, filters, onF
               value={filters.maxSize ?? ''}
               onChange={(e) => updateFilter('maxSize', e.target.value ? parseFloat(e.target.value) : null)}
               placeholder="Max MB"
-              className="flex-1 px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-200 text-sm"
+              className="input-text flex-1 py-2 text-sm"
             />
           </div>
         </div>
 
         <div className="mb-6">
-          <label className="block text-sm font-medium text-slate-300 mb-3">
-            <i className="fas fa-shapes mr-2 text-slate-400" />Categories
+          <label className="section-heading text-sm mb-3">
+            <i className="fas fa-shapes text-slate-400" />Categories
           </label>
           <div className="space-y-2" id="categoryFilters">
             {categories.map((category) => (
@@ -161,8 +161,8 @@ const FilterPanel: React.FC<FilterPanelProps> = ({ isOpen, onClose, filters, onF
         </div>
 
         <div className="mb-6">
-          <label className="block text-sm font-medium text-slate-300 mb-3">
-            <i className="fas fa-hashtag mr-2 text-slate-400" />Tags
+          <label className="section-heading text-sm mb-3">
+            <i className="fas fa-hashtag text-slate-400" />Tags
           </label>
           <div className="flex flex-wrap gap-2" id="tagFilters">
             {tags.map((tag) => (
@@ -178,33 +178,33 @@ const FilterPanel: React.FC<FilterPanelProps> = ({ isOpen, onClose, filters, onF
         </div>
 
         <div className="mb-6">
-          <label className="block text-sm font-medium text-slate-300 mb-3">
-            <i className="fas fa-calendar-alt mr-2 text-slate-400" />Date Range
+          <label className="section-heading text-sm mb-3">
+            <i className="fas fa-calendar-alt text-slate-400" />Date Range
           </label>
           <div className="grid grid-cols-2 gap-3">
             <input
               type="date"
               value={filters.dateFrom || ''}
               onChange={(e) => updateFilter('dateFrom', e.target.value || null)}
-              className="px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-200 text-sm"
+              className="input-text py-2 text-sm"
             />
             <input
               type="date"
               value={filters.dateTo || ''}
               onChange={(e) => updateFilter('dateTo', e.target.value || null)}
-              className="px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-200 text-sm"
+              className="input-text py-2 text-sm"
             />
           </div>
         </div>
 
         <div className="mb-6">
-          <label className="block text-sm font-medium text-slate-300 mb-3">
-            <i className="fas fa-vector-square mr-2 text-slate-400" />Aspect Ratio
+          <label className="section-heading text-sm mb-3">
+            <i className="fas fa-vector-square text-slate-400" />Aspect Ratio
           </label>
           <select
             value={filters.aspectRatio}
             onChange={(e) => updateFilter('aspectRatio', e.target.value as FilterState['aspectRatio'])}
-            className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-sm text-slate-200"
+            className="input-text py-2 text-sm"
           >
             <option value="all">Any</option>
             <option value="16:9">16:9</option>
@@ -218,13 +218,13 @@ const FilterPanel: React.FC<FilterPanelProps> = ({ isOpen, onClose, filters, onF
         <div className="flex gap-3 pt-4 border-t border-slate-700">
           <button
             onClick={onApply}
-            className="flex-1 px-4 py-3 bg-indigo-600 hover:bg-indigo-700 rounded-xl font-medium transition-colors"
+            className="action-button action-button--primary flex-1"
           >
             <i className="fas fa-check mr-2" />Apply Filters
           </button>
           <button
             onClick={onReset}
-            className="px-4 py-3 bg-slate-700 hover:bg-slate-600 rounded-xl transition-colors"
+            className="action-button action-button--ghost"
           >
             <i className="fas fa-undo" />
           </button>
