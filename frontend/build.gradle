@@ -16,7 +16,7 @@ tasks.register("buildFrontend", com.github.gradle.node.npm.task.NpmTask) {
     args = ["run", "build"]
     inputs.dir("src")
     inputs.file("package.json")
-    inputs.file("vite.config.js")
+    inputs.file("vite.config.ts")
     outputs.dir(layout.buildDirectory.dir("dist"))
 }
 
